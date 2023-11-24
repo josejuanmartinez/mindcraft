@@ -1,4 +1,10 @@
-# MindCraft
-Mindcraft, the open-source AI solution to craft the minds of your NPC characters for your videogames.
+<p align="center">
+<img 
+  width="20%"
+  src="https://github.com/josejuanmartinez/mindcraft/assets/36634572/0ef83288-9e53-444d-baa0-2c61b0fc26ca" alt="mindcraft"/>
+</p>
 
-![MindCraftlogo](https://github.com/josejuanmartinez/mindcraft/assets/36634572/50d7df68-b62b-4ec0-80c4-31445d3aaeb5)
+# MindCraft
+The open-source AI solution to craft the minds of your NPC characters for your videogames.
+
+(Coming soon)
