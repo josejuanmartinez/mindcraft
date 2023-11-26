@@ -1,5 +1,5 @@
 from enum import Enum
 
 
-class Embeddings(Enum):
+class EmbeddingsTypes(Enum):
     MINILM = "all-MiniLM-L6-v2"

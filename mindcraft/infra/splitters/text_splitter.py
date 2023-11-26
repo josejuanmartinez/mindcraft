@@ -45,4 +45,3 @@ class TextSplitter:
             start_idx += self._tokens_per_chunk - self._chunk_overlap
             cur_idx = min(start_idx + self._tokens_per_chunk, len(input_ids))
             chunk_ids = input_ids[start_idx:cur_idx]
-

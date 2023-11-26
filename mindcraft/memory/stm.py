@@ -12,9 +12,9 @@ class STM:
         :param ltm: long-term memory object, to store old elements in short-term
         :param capacity: number of past interactions stored in the short-term memory.
         """
-        self.ltm = ltm
-        self.capacity = capacity
-        self.interactions = collections.deque(maxlen=self.capacity)
+        self._ltm = ltm
+        self._capacity = capacity
+        self._interactions = collections.deque(maxlen=capacity)
 
     def remember(self, text: str):
         """
@@ -22,7 +22,15 @@ class STM:
             Then, adds the newest interaction.
         :param text: last interaction happened to store in STM.
         """
-        if len(self.interactions) == self.capacity:
-            self.ltm.remember(self.interactions[0])
+        if len(self.interactions) == self._capacity:
+            self._ltm.memorize(self.interactions[0])
 
         self.interactions.append(text)
+
+    @property
+    def interactions(self) -> list[str]:
+        return self._interactions
+
+    @interactions.setter
+    def interactions(self, value: list[str]):
+        self._interactions = value
