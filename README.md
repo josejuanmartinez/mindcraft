@@ -60,6 +60,12 @@ Frodo: What do you think about the Rings of Power?
 Galadriel: I will not lie to you: this world can indeed be changed by the Rings of Power. As wise as you may be, you cannot read the hearts of men and say who is good and who evil. Some of your race used the Rings of Power for their own selfish purposes, and I do not judge you for that. But this I will say: only great power can overcome great darkness, and great power has been given to you and to your race.
 ```
 
+## LLM integrated
+### Quantized (4b)
+- [TheBloke/openinstruct-mistral-7B-AWQ](https://huggingface.co/TheBloke/openinstruct-mistral-7B-AWQ)
+
+## Embeddings for RAG
+- [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
 
 ## CUDA and Torch
 Although torch is included in the `transformers` library as a dependency, if you see your gpu is not being
