@@ -1,5 +1,4 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
 from mindcraft.infra.engine.llm_types import LLMType
 
 
@@ -13,8 +12,8 @@ class LLM:
         :param device:
         """
         self.device = device
-        self.model = AutoModelForCausalLM.from_pretrained(engine.value)
-        self.tokenizer = AutoTokenizer.from_pretrained(engine.value)
+        self.model = AutoModelForCausalLM.from_pretrained(engine.value, device_map=self.device)
+        self.tokenizer = AutoTokenizer.from_pretrained(engine.value, device_map=self.device)
 
     def __call__(self,
                  prompt: str,

@@ -25,7 +25,7 @@ class STM:
         if len(self.interactions) == self._capacity:
             self._ltm.memorize(self.interactions[0])
 
-        self.interactions.append(text)
+        self._interactions.append(text)
 
     @property
     def interactions(self) -> collections.deque[str]:

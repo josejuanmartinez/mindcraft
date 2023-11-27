@@ -14,16 +14,18 @@ class Game:
         self.npc = dict()
 
     def add_npc(self, character_id: str,
+                description:str,
                 personalities: list[Personality],
                 motivations: list[Motivation]) -> NPC:
         """
 
         :param character_id:
+        :param description:
         :param personalities:
         :param motivations:
         :return:
         """
-        npc = NPC(character_id, personalities, motivations)
+        npc = NPC(character_id, description, personalities, motivations)
         self.npc[character_id] = npc
         return npc
 

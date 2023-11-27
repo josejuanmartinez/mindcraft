@@ -5,11 +5,11 @@ from mindcraft.infra.engine.llm_types import LLMType
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
 from mindcraft.infra.vectorstore.chroma import Chroma
 from mindcraft.infra.splitters.text_splitter import TextSplitter
-from mindcraft.settings import KNOWN_BY_SEPARATOR, LOGGER_FORMAT
+from mindcraft.settings import SEPARATOR, LOGGER_FORMAT
 
 import logging
 
-logging.basicConfig(format=LOGGER_FORMAT, datefmt='%d-%m-%Y:%H:%M:%S', level=logging.INFO)
+logging.basicConfig(format=LOGGER_FORMAT, datefmt='%d-%m-%Y:%H:%M:%S', level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
 
@@ -143,7 +143,7 @@ class World:
         cls._instance.store.add_to_collection(
             text=chronicle_text,
             text_embeddings=sentence_transformer_ef([chronicle_text]),
-            metadata={"known_by": KNOWN_BY_SEPARATOR.join(known_by)},
+            metadata={"known_by": SEPARATOR.join(known_by)},
             text_id=chronicle_id
         )
 

@@ -2,4 +2,4 @@ from enum import Enum
 
 
 class LLMType(Enum):
-    MISTRAL7B = "mistralai/Mistral-7B-v0.1"
+    MISTRAL7B = "TheBloke/openinstruct-mistral-7B-AWQ"
