@@ -23,7 +23,7 @@ game = Game(world_name="Lord of the Rings")
 game.book_to_chronicles("./lord_of_the_rings.txt")
 
 character_name = "Galadriel"
-character_description = ""Elven queen of Lothlorien, bearer of Nenya, an elven ring of power. Married to Celeborn"
+character_description = "Elven queen of Lothlorien, bearer of Nenya, an elven ring of power. Married to Celeborn"
 
 personalities = [Personality(x) for x in ['caring', 'wise', 'ethereal', 'loving', 'concerned', 'mysterious']]
 motivations = [Motivation(x) for x in ['Protecting Middle Earth', 'Protecting the forests and the living creatures', 'Protecting the world, Arda', 'Destroying the evil']]
