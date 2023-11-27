@@ -10,9 +10,11 @@ The open-source AI solution to craft the minds of your NPC characters for your v
 It includes the following features:
 
 - Text generation using LLMs (Mistral)
-- Motivations, personality and backgrounds (RAG)
+- Motivations, personality, personal goals
 - Knowledge and awareness about the world (RAG)
 - Short and Long-term memory (RAG)
+- Conversational styles
+- Supervised finetuning by human feedback
 
 ## CUDA and Torch
 Although torch is included in the `transformers` library as a dependency, if you see your gpu is not being
@@ -21,3 +23,8 @@ utilized, try to run:
 ```
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 ```
+<p align="center">
+<img 
+  width="50%"
+  src="https://github.com/josejuanmartinez/mindcraft/assets/36634572/7778d4a4-6b25-4b1a-9b26-b1bfa9d94727" alt="mindcraft architecture"/>
+</p>
