@@ -20,7 +20,7 @@ It includes the following features:
 ```python
 
 game = Game(world_name="Lord of the Rings")
-game.book_to_chronicles("./lord_of_the_rings.txt")
+game.book_to_world("./lord_of_the_rings.txt")
 
 character_name = "Galadriel"
 character_description = "Elven queen of Lothlorien, bearer of Nenya, an elven ring of power. Married to Celeborn"
