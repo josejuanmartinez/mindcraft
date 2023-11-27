@@ -28,7 +28,7 @@ class STM:
         self.interactions.append(text)
 
     @property
-    def interactions(self) -> list[str]:
+    def interactions(self) -> collections.deque[str]:
         return self._interactions
 
     @interactions.setter

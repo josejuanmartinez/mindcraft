@@ -14,4 +14,10 @@ It includes the following features:
 - Knowledge and awareness about the world (RAG)
 - Short and Long-term memory (RAG)
 
-(Coming soon)
+## CUDA and Torch
+Although torch is included in the `transformers` library as a dependency, if you see your gpu is not being
+utilized, try to run:
+- For Cuda 12.1, 12.2, 12.3:
+```
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+```
