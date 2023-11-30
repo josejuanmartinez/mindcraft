@@ -1,5 +1,13 @@
 transformers==4.35.2
-chromadb==0.4.18
-tiktoken==0.5.1
 sentence_transformers==2.2.2
 autoawq==0.1.7
+
+# VECTOR STORES OPTIONS:
+# For ChromaDB:
+# chromadb==0.4.18
+
+# TEXT SPLITTING OPTIONS
+# For token-based splitting of texts to be stored in the vector store:
+# tiktoken==0.5.1
+# For sentence-based splitting of texts:
+# spacy==3.6.7.2

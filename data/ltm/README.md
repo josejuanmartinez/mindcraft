@@ -1,0 +1,1 @@
+Default folder for storing all your character's Long-term memory files 

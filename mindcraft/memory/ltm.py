@@ -1,19 +1,32 @@
-from chromadb.utils import embedding_functions
-
+from mindcraft.infra.vectorstore.stores_types import StoresTypes
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
-from mindcraft.infra.vectorstore.chroma import Chroma
+from settings import LTM_DATA_PATH
 
 
 class LTM:
-    def __init__(self, character_id: str, ltm_embeddings: EmbeddingsTypes = EmbeddingsTypes.MINILM):
+    def __init__(self,
+                 store_type: StoresTypes,
+                 character_id: str,
+                 ltm_embeddings: EmbeddingsTypes = EmbeddingsTypes.MINILM):
         """
         Long-term memory. It stores everything that happened to a character.
         They are kept in the vector store, so the retrieval is slower than the STM.
         :param character_id: the unique `id` of the character
         :param ltm_embeddings: Embeddings to use in LTM in the VectorS Store.
         """
-        self.store = Chroma(character_id)
-        self.items = self.store.count()
+        match store_type.value:
+            case StoresTypes.CHROMA.value:
+                try:
+                    from mindcraft.infra.vectorstore.chroma import Chroma
+                except ImportError:
+                    raise Exception(f"To use `chromadb` as your vector store, please install it first using pip:\n"
+                                    f"`pip install chromadb`")
+
+                self.store = Chroma(LTM_DATA_PATH, character_id, ltm_embeddings)
+
+            case _:
+                raise NotImplementedError(f"{store_type} not implemented")
+
         self.embeddings = ltm_embeddings
 
     def memorize(self, text: str):
@@ -21,14 +34,10 @@ class LTM:
             Stores a memory or interaction into the vector store.
         :param text: last interaction happened to store in LTM.
         """
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
-            model_name=str(self.embeddings.value))
         self.store.add_to_collection(
             text=text,
-            text_embeddings=sentence_transformer_ef([text]),
             metadata=None,
-            text_id=str(self.items))
-        self.items += 1
+            text_id=str(self.store.count()))
 
     def remember_about(self,
                        topic: str,
@@ -39,9 +48,8 @@ class LTM:
         :param n_results:
         :return:
         """
-        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
-            model_name=str(self.embeddings.value))
-
-        return self.store.collection.query(
-                query_embeddings=sentence_transformer_ef([topic]),
-                n_results=n_results)
+        return self.store.query(
+                text=topic,
+                num_results=n_results,
+                where={}
+        )

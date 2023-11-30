@@ -25,7 +25,7 @@ def query_book(book_name: str,
     :return:
     """
     world = World(world_name=book_name)
-    results = world.get_chronicles(topic, num_results, known_by)
+    results = world.get_lore(topic, num_results, known_by)
     for document in results['documents']:
         for d in document:
             logger.info(d)

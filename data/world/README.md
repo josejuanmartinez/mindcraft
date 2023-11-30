@@ -1,0 +1,1 @@
+Default folder for storing your world lore, known to all or some npcs only.  

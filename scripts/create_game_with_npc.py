@@ -5,6 +5,10 @@ import logging
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+
+from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
+from mindcraft.infra.engine.llm_types import LLMType
+from mindcraft.infra.vectorstore.stores_types import StoresTypes
 from mindcraft.features.motivation import Motivation
 from mindcraft.features.personality import Personality
 from mindcraft.play.game import Game
@@ -30,10 +34,13 @@ def create_game_with_npc(world_name: str,
     :param interaction:
     :return:
     """
-    game = Game(world_name)
+    game = Game(world_name=world_name,
+                store_type=StoresTypes.CHROMA,
+                embeddings=EmbeddingsTypes.MINILM,
+                llm_type=LLMType.ZEPHYR7B)
     personalities = [Personality(x) for x in personalities]
     motivations = [Motivation(x) for x in motivations]
-    npc = game.add_npc(character_name, character_description, personalities, motivations)
+    npc = game.add_npc(character_name, character_description, personalities, motivations, store_type=StoresTypes.CHROMA)
     answer, feedback = npc.react_to(interaction)
     print(answer)
 
@@ -56,4 +63,3 @@ if __name__ == "__main__":
                          [item for sublist in args.personality for item in sublist],
                          [item for sublist in args.motivation for item in sublist],
                          args.interaction)
-

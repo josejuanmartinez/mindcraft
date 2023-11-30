@@ -1,12 +1,13 @@
+from mindcraft.infra.vectorstore.stores_types import StoresTypes
 from mindcraft.infra.sft.feedback import Feedback
 from mindcraft.features.motivation import Motivation
 from mindcraft.features.personality import Personality
 from mindcraft.infra.prompts.answer import Answer
-from mindcraft.chronicles.world import World
+from mindcraft.lore.world import World
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
 from mindcraft.memory.ltm import LTM
 from mindcraft.memory.stm import STM
-from mindcraft.settings import LOGGER_FORMAT
+from mindcraft.settings import LOGGER_FORMAT, ALL
 
 import logging
 
@@ -20,6 +21,7 @@ class NPC:
                  description: str,
                  personalities: list[Personality],
                  motivations: list[Motivation],
+                 store_type: StoresTypes,
                  stm_capacity: int = 15,
                  ltm_embeddings: EmbeddingsTypes = EmbeddingsTypes.MINILM):
         """
@@ -29,13 +31,14 @@ class NPC:
         :param description: a short description of who your character in the world is
         :param personalities:
         :param motivations:
+        :param store_type:
         :param stm_capacity: the short-term memory capacity. STM stores in memory for fast retrieval this number
         of interactions
         :param ltm_embeddings:
         """
         self.character_name = character_name
         self.description = description
-        self.ltm = LTM(character_name, ltm_embeddings)
+        self.ltm = LTM(store_type, character_name, ltm_embeddings)
         self.stm = STM(self.ltm, stm_capacity)
         self.personalities = personalities
         self.motivations = motivations
@@ -54,7 +57,7 @@ class NPC:
         recent_events = self.stm.interactions
         long_term_events = self.ltm.remember_about(interaction)['documents'][0]
         # world_knowledge = World.get_chronicles(interaction, known_by=self.character_id)['documents']
-        world_knowledge = World.get_chronicles(interaction, known_by='all')['documents'][0]
+        world_knowledge = World.get_lore(interaction, known_by=ALL)['documents'][0]
         personality_features = [x.feature for x in self.personalities]
         motivations_and_goals = [x.feature for x in self.motivations]
 

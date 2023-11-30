@@ -1,33 +1,57 @@
 from typing import Optional
 
 import chromadb
-from chromadb import Embeddings
+from chromadb.utils import embedding_functions
 
-from mindcraft.settings import DIR_PATH
+from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
+from mindcraft.infra.vectorstore.store import Store
 
 
-class Chroma:
-    def __init__(self, character_id: str, path: str = DIR_PATH):
+class Chroma(Store):
+    def __init__(self, path: str, collection_name: str, embeddings: EmbeddingsTypes):
         """
         ChromaDB manager, in charge of loading, persisting and query the character memories and interactions
-        :param character_id:
+        :param collection_name:
+        :param path:
+        :param embeddings:
         """
-        self.client = chromadb.PersistentClient(path=f"{path}/{character_id}")
-        self.collection = self.client.get_or_create_collection(name=character_id)
+        super().__init__(path, collection_name, embeddings)
+        self.client = self.instantiate_client()
+        self.collection = self.create_or_get_collection()
+
+    def instantiate_client(self):
+        """
+
+        :return:
+        """
+        return chromadb.PersistentClient(path=self.path)
+
+    def create_or_get_collection(self):
+        return self.client.get_or_create_collection(name=self.collection_name)
+
+    def get_embeddings(self, text):
+        """
+
+        :param text:
+        :return:
+        """
+
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name=str(self.embeddings.value))
+        return sentence_transformer_ef([text])
 
     def add_to_collection(self,
                           text: str,
-                          text_embeddings: Embeddings,
                           metadata: Optional[dict],
                           text_id: str):
         """
 
         :param text:
-        :param text_embeddings:
         :param metadata:
         :param text_id: 
         :return:
         """
+        text_embeddings = self.get_embeddings(text)
         self.collection.add(
             documents=[text],
             embeddings=text_embeddings,
@@ -43,3 +67,17 @@ class Chroma:
         if self.collection is None:
             return 0
         return self.collection.count()
+
+    def query(self, text: str, num_results: int, where: dict):
+        """
+
+        :param text:
+        :param num_results:
+        :param where:
+        :return:
+        """
+
+        return self.collection.query(
+                query_embeddings=self.get_embeddings(text),
+                n_results=num_results,
+                where=where)
