@@ -18,8 +18,11 @@ It includes the following features:
 
 ## Example of how to create a World and NPC
 ```python
+game = Game(world_name="LordOfTheRings",
+            store_type=StoresTypes.CHROMA,
+            embeddings=EmbeddingsTypes.MINILM,
+            llm_type=LLMType.ZEPHYR7B)
 
-game = Game(world_name="Lord of the Rings")
 game.book_to_world("./lord_of_the_rings.txt")
 
 character_name = "Galadriel"
@@ -27,11 +30,14 @@ character_description = "Elven queen of Lothlorien, bearer of Nenya, an elven ri
 
 personalities = [Personality(x) for x in ['caring', 'wise', 'ethereal', 'loving', 'concerned', 'mysterious']]
 motivations = [Motivation(x) for x in ['Protecting Middle Earth', 'Protecting the forests and the living creatures', 'Protecting the world, Arda', 'Destroying the evil']]
-npc = game.add_npc(character_name, character_description, personalities, motivations)
+
+npc = game.add_npc(character_name, character_description, personalities, motivations, store_type=StoresTypes.CHROMA)
 
 interaction = "What do you think about the Rings of Power?"
 
 answer, feedback = npc.react_to(interaction)
+
+print(answer)
 
 ```
 
@@ -48,7 +54,6 @@ Also, you have several goals and motivations in life, namely: Protecting Lothlor
 -....Did not Gandalf tell you that the rings give power according to the measure of each possessor?
 -....The power of the ring had lengthened his years far beyond their span; but that power only the Great Rings wield.
 -But there is only one Power in this world that knows all about the Rings and their effects; and as far as I know there is no Power in the world that knows all about hobbits.
-Among the Wise I 
 
 Remember you are a character talking to another character. You are not aware of the author / writer of the book or lore. Always answer as a character of a book talking to another character.
 
