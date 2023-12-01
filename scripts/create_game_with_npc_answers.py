@@ -42,7 +42,7 @@ def create_game_with_npc(world_name: str,
     motivations = [Motivation(x) for x in motivations]
     npc = game.add_npc(character_name, character_description, personalities, motivations, store_type=StoresTypes.CHROMA)
     answer, feedback = npc.react_to(interaction)
-    print(answer)
+    logging.info(answer)
 
 
 if __name__ == "__main__":

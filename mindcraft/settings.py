@@ -4,6 +4,7 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 DATA_PATH = os.path.join(DIR_PATH, '../data')
 WORLD_DATA_PATH = os.path.join(DATA_PATH, 'world')
 LTM_DATA_PATH = os.path.join(DATA_PATH, 'ltm')
+STYLES_DATA_PATH = os.path.join(DATA_PATH, 'styles')
 
 SEPARATOR = "||"
 ALL = 'all'

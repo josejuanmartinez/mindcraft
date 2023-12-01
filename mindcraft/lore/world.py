@@ -1,3 +1,4 @@
+import settings
 from mindcraft.infra.splitters.sentence_text_splitter import SentenceTextSplitter
 from mindcraft.infra.splitters.token_text_splitter import TokenTextSplitter
 from mindcraft.infra.splitters.text_splitters_types import TextSplitterTypes
@@ -132,20 +133,22 @@ class World:
     def get_lore(cls,
                  topic: str,
                  num_results: int = 5,
-                 known_by: str = None) -> dict:
+                 known_by: str = None,
+                 exact_match: str = None) -> dict:
         """
 
+        :param exact_match:
         :param topic:
         :param num_results:
         :param known_by:
         :return:
         """
 
-        where = {}
+        all_known_by = [settings.ALL]
         if known_by is not None and known_by != 'all':
-            where = {"known_by": known_by}
+            all_known_by.append(known_by)
 
-        return cls._instance.store.query(topic, num_results, where)
+        return cls._instance.store.query(topic, num_results, all_known_by, exact_match)
 
     @classmethod
     def add_lore(cls,

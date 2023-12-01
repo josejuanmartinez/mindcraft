@@ -28,12 +28,13 @@ class Store:
         """
         raise NotImplementedError()
 
-    def query(self, text: str, num_result: int, where: dict):
+    def query(self, text: str, num_result: int, all_known_by: dict, exact_match: str = None):
         """
 
+        :param exact_match:
         :param text:
         :param num_result:
-        :param where:
+        :param all_known_by:
         :return:
         """
         raise NotImplementedError()
