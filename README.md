@@ -131,9 +131,10 @@ There are two loops integrated in the framework which allow you to create your o
     npc.extract_conversational_styles_talking_to_user()
 ```
 ### Example of supervised finetuning dataset
+```csv
 Galadriel||default||Good night, Galadriel!||'Good night, my friends! '\nsaid Galadriel. '\nSleep in peace!
 Galadriel||grave||why he could say that?||....`He would be rash indeed that said that thing,' said Galadriel gravely.
-
+```
 ## LLM integrated
 ### Quantized (4b)
 - [TheBloke/zephyr-7B-beta-AWQ](https://huggingface.co/TheBloke/zephyr-7B-beta-AWQ)
