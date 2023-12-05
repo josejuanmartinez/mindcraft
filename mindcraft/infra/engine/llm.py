@@ -7,9 +7,10 @@ class LLM:
                  engine: LLMType = LLMType.MISTRAL7B,
                  device: str = 'cuda'):
         """
-
-        :param engine:
-        :param device:
+        Large Language Model class, in charge of executing a prompt and retrieving an answer for the LLM. Used to
+        generate the answers of the NPCs.
+        :param engine: one of the LLMType engines to use.
+        :param device: device to use (default: `cuda`)
         """
         self.device = device
         self.model = AutoModelForCausalLM.from_pretrained(engine.value, device_map=self.device)
@@ -18,11 +19,15 @@ class LLM:
     def __call__(self,
                  prompt: str,
                  max_tokens: int = 100,
-                 do_sample: bool = True):
+                 do_sample: bool = True) -> str:
         """
-
-        :param prompt:
-        :return:
+        Sends a prompt to the LLM. You can specify the max. number of tokens to retrieve and if you do sampling when
+        generating the text.
+        :param prompt: the prompt to use
+        :param max_tokens: max tokens to receive
+        :param do_sample: apply stochastic selection of tokens to prevent always generating the same wording.
+        Default: true
+        :return: the answer
         """
         model_inputs = self.tokenizer([prompt], return_tensors="pt").to(self.device)
         self.model.to(self.device)

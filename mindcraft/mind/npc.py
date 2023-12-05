@@ -2,19 +2,18 @@ from mindcraft.infra.vectorstore.stores_types import StoresTypes
 from mindcraft.infra.sft.feedback import Feedback
 from mindcraft.features.motivation import Motivation
 from mindcraft.features.personality import Personality
-from mindcraft.infra.prompts.answer import Answer
+from mindcraft.infra.prompts.prompt import Prompt
 from mindcraft.lore.world import World
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
 from mindcraft.memory.ltm import LTM
-from mindcraft.memory.stm import STM
-from mindcraft.settings import LOGGER_FORMAT, ALL
+from mindcraft.settings import LOGGER_FORMAT, DATE_FORMAT
 from mindcraft.features.mood import Mood
 
 import logging
 
 from styles.conversational_style import ConversationalStyle
 
-logging.basicConfig(format=LOGGER_FORMAT, datefmt='%d-%m-%Y:%H:%M:%S', level=logging.INFO)
+logging.basicConfig(format=LOGGER_FORMAT, datefmt=DATE_FORMAT, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -24,28 +23,28 @@ class NPC:
                  description: str,
                  personalities: list[Personality],
                  motivations: list[Motivation],
+                 mood: Mood,
                  store_type: StoresTypes,
-                 stm_capacity: int = 15,
                  ltm_embeddings: EmbeddingsTypes = EmbeddingsTypes.MINILM):
         """
         A class managing the Non-player Character, including short-term, long-term memory, backgrounds, motivations
         to create the answer.
         :param character_name: the unique id of the character
         :param description: a short description of who your character in the world is
-        :param personalities:
-        :param motivations:
-        :param store_type:
-        :param stm_capacity: the short-term memory capacity. STM stores in memory for fast retrieval this number
-        of interactions
-        :param ltm_embeddings:
+        :param personalities: a list of personalities that permanently define the character
+        (if it's a current state then use it in `moods`)
+        :param motivations: a list of motivations the character has
+        :param mood: current mood of the character. They can change over the time.
+        :param store_type: VectorStore from StoresTypes you prefer to use.
+        :param ltm_embeddings: embeddings from EmbeddingsTypes you prefer to use
         """
-        self.character_name = character_name
-        self.description = description
-        self.ltm = LTM(store_type, character_name, ltm_embeddings)
-        self.stm = STM(self.ltm, stm_capacity)
-        self.personalities = personalities
-        self.motivations = motivations
-        self.conversational_style = ConversationalStyle(store_type, character_name, ltm_embeddings)
+        self._character_name = character_name
+        self._description = description
+        self._ltm = LTM(store_type, character_name, ltm_embeddings)
+        self._personalities = personalities
+        self._motivations = motivations
+        self._mood = mood
+        self._conversational_style = ConversationalStyle(store_type, character_name, ltm_embeddings)
         if not World.is_created():
             logger.warning("World has not been instantiated at this point. Make sure it's created before you call to "
                            "react")
@@ -62,47 +61,124 @@ class NPC:
         NOTE: This is not a semantic search since it would retrieve many non-conversational agents. Make sure to chose
         properly your keyword.
         :param keyword: string to look for in exact match. Default: `said`
-        :return:
         """
         res_dict = dict()
-        exact_match = f"{keyword} {self.character_name}"
-        results = World.get_lore(exact_match, 25, self.character_name, exact_match)
-        for document in results['documents']:
-            for d in document:
-                mood = input(f"Found this interaction of {self.character_name}:\n{'='*10}\n{d}\n{'='*10}\n"
-                             f"Enter a mood name OR `d` for default mood OR `i` to ignore OR `q` to quit:")
+        exact_match = f"{keyword} {self._character_name}"
+        results = World.get_lore(exact_match, 25, self._character_name, exact_match)
+        for d in results.documents:
+            mood = input(f"Found this interaction of {self._character_name}:\n{'='*10}\n{d}\n{'='*10}\n"
+                         f"Enter a mood name OR `d` for default mood OR `i` to ignore OR `q` to quit:")
+            if mood == 'q':
+                break
+            elif mood == 'i':
+                continue
+            else:
+                if mood == 'd':
+                    mood = Mood.DEFAULT
+                mood = Mood(mood)
+                question = input(f"What could have been asked to {self._character_name} to answer that?:")
+                if mood not in res_dict:
+                    res_dict[mood.feature] = list()
+                res_dict[mood.feature].append(d)
+                # Save as Conversational Style
+                self._conversational_style.memorize(d, mood)
+                # Save to feedback file
+                Feedback(self._character_name, mood, self._conversational_style, question, d).accept()
+        return res_dict
+
+    def extract_conversational_styles_talking_to_user(self):
+        """
+        Creates conversations where the npc talks in the World to the user.
+        """
+        while True:
+            interaction = input(f"Say something to {self._character_name} or `q` to quit:")
+            if interaction == 'q':
+                break
+            else:
+
+                answer, feedback = self.react_to(interaction,
+                                                 min_similarity=0.85,
+                                                 ltm_num_results=3,
+                                                 world_num_results=7,
+                                                 max_tokens=200)
+                print(answer)
+                mood = input(
+                    f"Enter a mood for this answer, `d` for default, `i` to ignore this answer and `q` to quit:")
                 if mood == 'q':
                     break
                 elif mood == 'i':
                     continue
                 else:
-                    if mood not in res_dict:
-                        res_dict[mood] = list()
-                    res_dict[mood].append(d)
-                    self.conversational_style.memorize(d, Mood(mood))
-        return res_dict
+                    if mood == 'd':
+                        mood = Mood.DEFAULT
 
-    def react_to(self, interaction: str) -> tuple[str, Feedback]:
+                    feedback.accept(mood=Mood(mood))
+
+    def react_to(self,
+                 interaction: str,
+                 min_similarity: float = 0.85,
+                 ltm_num_results: int = 3,
+                 world_num_results: int = 10,
+                 max_tokens: int = 250) -> tuple[str, Feedback]:
         """
-
-        :param interaction:
-        :return:
+        Produces a reaction/answer to something you say to an NPC. It will use the lore of the world + the short memory
+        + the long-term-memory + the personality, motivations and moods to generate a response.
+        :param interaction: the interaction / question you tell/ask the NPC
+        :param min_similarity: minimum similarity score to filter out irrrelevant information
+        :param ltm_num_results: max number of results to retrieve from Long-term memory
+        :param world_num_results: max number of results to retrieve from World Lore
+        :param max_tokens: max_tokens of the answer
+        :return: a tuple with the text of the answer and a Feedback object, in case you want to use to review the answer
+        and provide feedback to the model, for training future npc-based LLMs.
         """
-        recent_events = self.stm.interactions
-        long_term_events = self.ltm.remember_about(interaction)['documents'][0]
-        # world_knowledge = World.get_chronicles(interaction, known_by=self.character_id)['documents']
-        world_knowledge = World.get_lore(interaction, known_by=ALL)['documents'][0]
-        personality_features = [x.feature for x in self.personalities]
-        motivations_and_goals = [x.feature for x in self.motivations]
+        long_term_events = self._ltm.remember_about(interaction,
+                                                    num_results=ltm_num_results,
+                                                    min_similarity=min_similarity).documents
+        world_knowledge = World.get_lore(interaction,
+                                         known_by=self._character_name,
+                                         num_results=world_num_results,
+                                         min_similarity=min_similarity).documents
 
-        prompt = Answer.create(recent_events,
-                               long_term_events,
+        personalities = [x.feature for x in self._personalities]
+        motivations = [x.feature for x in self._motivations]
+        mood = self._mood.feature if self._mood is not None else Mood.DEFAULT
+
+        conversational_style = self._conversational_style.retrieve_interaction_by_mood(mood).documents
+
+        # I create the prompt
+        prompt = Prompt.create(long_term_events,
                                world_knowledge,
-                               self.character_name,
+                               self._character_name,
                                World.get_instance().world_name,
                                interaction,
-                               personality_features,
-                               motivations_and_goals)
+                               personalities,
+                               motivations,
+                               conversational_style,
+                               mood)
 
-        answer = World.get_instance().llm(prompt)
-        return answer, Feedback(interaction, answer)
+        answer = World.get_instance().llm(prompt, max_tokens=max_tokens)
+        answer = answer[answer]
+        self._ltm.memorize(answer, self._mood)
+        return answer, Feedback(self._character_name, self._mood, self._conversational_style, interaction, answer)
+
+    def change_mood(self, mood: str):
+        """
+        Changes the mood of the character.
+        :param mood: string defining the new mood
+        """
+        self._mood = Mood(mood)
+
+    @property
+    def character_name(self):
+        """ Getter of the `character_name` property"""
+        return self._character_name
+
+    @property
+    def mood(self):
+        """ Getter of the `mood` property"""
+        return self._mood
+
+    @property
+    def conversational_style(self):
+        """ Getter of the `conversational_style` property"""
+        return self._conversational_style

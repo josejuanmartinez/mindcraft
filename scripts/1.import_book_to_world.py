@@ -14,10 +14,9 @@ from mindcraft.lore.world import World
 
 def process_book(book_name: str, path: str):
     """
-
-    :param book_name:
-    :param path:
-    :return:
+    Reads a txt book or piece of lore from `path` and stores as a World with the name of `book_name`
+    :param book_name: the name of the book and world
+    :param path: the path to the txt file
     """
     world = World(world_name=book_name,
                   embeddings=EmbeddingsTypes.MINILM,

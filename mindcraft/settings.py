@@ -10,3 +10,4 @@ SEPARATOR = "||"
 ALL = 'all'
 
 LOGGER_FORMAT = '%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s'
+DATE_FORMAT = '%d-%m-%Y:%H:%M:%S'

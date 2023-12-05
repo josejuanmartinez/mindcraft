@@ -1,4 +1,5 @@
 import settings
+from mindcraft.infra.vectorstore.search_results import SearchResult
 from mindcraft.infra.splitters.sentence_text_splitter import SentenceTextSplitter
 from mindcraft.infra.splitters.token_text_splitter import TokenTextSplitter
 from mindcraft.infra.splitters.text_splitters_types import TextSplitterTypes
@@ -11,7 +12,7 @@ from mindcraft.settings import SEPARATOR, LOGGER_FORMAT, WORLD_DATA_PATH, ALL
 
 import logging
 
-logging.basicConfig(format=LOGGER_FORMAT, datefmt='%d-%m-%Y:%H:%M:%S', level=logging.ERROR)
+logging.basicConfig(format=LOGGER_FORMAT, datefmt=settings.DATE_FORMAT, level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
 
@@ -79,54 +80,63 @@ class World:
 
     @property
     def embeddings(self):
+        """ Getter for the embeddings property"""
         if self._instance is None:
             return None
         return self._instance._embeddings
 
     @embeddings.setter
     def embeddings(self, value: EmbeddingsTypes):
+        """ Setter for the embeddings property"""
         if self._instance is None:
             return
         self._instance._embeddings = value
 
     @property
     def llm(self):
+        """ Getter for the llm property"""
         if self._instance is None:
             return None
         return self._instance._llm
 
     @llm.setter
     def llm(self, value: LLMType):
+        """ Setter for the llm property"""
         if self._instance is None:
             return
         self._instance._llm = value
 
     @property
     def world_name(self):
+        """ Getter for the world_name property"""
         if self._instance is None:
             return None
         return self._instance._world_name
 
     @world_name.setter
     def world_name(self, value: str):
+        """ Setter for the world_name property"""
         if self._instance is None:
             return
         self._instance._world_name = value
 
     @property
     def store(self):
+        """ Getter for the store property"""
         if self._instance is None:
             return None
         return self._instance._store
 
     @store.setter
     def store(self, value: Store):
+        """ Setter for the store property"""
         if self._instance is None:
             return
         self._instance._store = value
 
     @classmethod
-    def is_created(cls):
+    def is_created(cls) -> bool:
+        """:return Returns true if the Singleton instance of the World is already created. False otherwise"""
         return cls._instance is not None
 
     @classmethod
@@ -134,21 +144,30 @@ class World:
                  topic: str,
                  num_results: int = 5,
                  known_by: str = None,
-                 exact_match: str = None) -> dict:
+                 exact_match: str = None,
+                 min_similarity: float = 0.85) -> SearchResult:
         """
-
-        :param exact_match:
-        :param topic:
-        :param num_results:
-        :param known_by:
-        :return:
+        Gets the lore from the world relevant to a topic, and filtered by who knows about it (known_by). You can use
+        `num_results` to get the top-n results and `exact_match` if you want the results to include something literal.
+        :param topic: the topic you are looking for in the Vector Store
+        :param num_results: the max. number of results to retrieve
+        :param known_by: filters by who know about this piece of lore. By default, (None) will look for commonly known
+        by all NPCs.
+        :param exact_match: Only returns documents which include literal expressions
+        :param min_similarity: The minimum similarity the document should have compared to the topic
+        :return SearchResult
         """
 
         all_known_by = [settings.ALL]
-        if known_by is not None and known_by != 'all':
+        if known_by is not None and known_by != settings.ALL:
             all_known_by.append(known_by)
 
-        return cls._instance.store.query(topic, num_results, all_known_by, exact_match)
+        return cls._instance.store.query(
+            topic,
+            num_results,
+            all_known_by,
+            exact_match,
+            min_similarity)
 
     @classmethod
     def add_lore(cls,
@@ -156,9 +175,9 @@ class World:
                  lore_id: str,
                  known_by: list[str]):
         """
-            Chronicles (stores) an event happened in a world.
+            Stores a piece of lore which happened in a world.
         :param lore_text: chronicle to be stored
-        :param lore_id:
+        :param lore_id: the id of the piece of lore
         :param known_by: list of character_ids who know the chronicle
         """
         logger.info(f"Processing {lore_id} [{lore_text[:10]}...]")
@@ -180,12 +199,10 @@ class World:
         Reads a file describing a world (a book, for example). Splits the text into small chunks and stores them
         in the world. You can use any of the text splitters available in TextSplitterTypes.
         :param book_path: the path to the book
-        :param text_splitter: one of those avialable in TextSplitterTypes (TokenTextSplitter, SentenceTextSplitter...)
+        :param text_splitter: one of those available in TextSplitterTypes (TokenTextSplitter, SentenceTextSplitter...)
         :param known_by: known by characters. If None, `all` will be included
         :param overlap: number of units (tokens, sentences) to overlap with previous/next chunks
         :param max_units: number of units (tokens, sentences) to accumulate in a chunk
-
-        :return:
         """
         with open(book_path, 'r') as f:
             book = f.read()
@@ -214,4 +231,5 @@ class World:
 
     @classmethod
     def get_instance(cls):
+        """ Returns the Singleton instance of the World"""
         return cls._instance
