@@ -63,7 +63,6 @@ class World:
             cls._instance._store_type = kwargs.get('store_type')
             cls._instance._llm_type = kwargs.get('llm_type') if 'llm_type' in kwargs else LLMType.ZEPHYR7B
             cls._instance._world_data_path = kwargs.get('path') if 'path' in kwargs else WORLD_DATA_PATH
-            cls._instance._llm = LLM(cls._instance._llm_type)
 
             match cls._instance._store_type.value:
                 case StoresTypes.CHROMA.value:
@@ -94,20 +93,6 @@ class World:
         if self._instance is None:
             return
         self._instance._embeddings = value
-
-    @property
-    def llm(self):
-        """ Getter for the llm property"""
-        if self._instance is None:
-            return None
-        return self._instance._llm
-
-    @llm.setter
-    def llm(self, value: LLMType):
-        """ Setter for the llm property"""
-        if self._instance is None:
-            return
-        self._instance._llm = value
 
     @property
     def world_name(self):
@@ -262,7 +247,7 @@ class World:
         we need the reference to the template used
         :return: the answer
         """
-        return cls._instance.llm.retrieve_answer(prompt, max_tokens, do_sample, prompt_template)
+        return LLM(cls._instance.llm_type).retrieve_answer(prompt, max_tokens, do_sample, prompt_template)
 
     @classmethod
     def get_instance(cls):
