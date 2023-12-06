@@ -1,4 +1,6 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.engine.llm_types import LLMType
 
 
@@ -34,3 +36,27 @@ class LLM:
 
         generated_ids = self.model.generate(**model_inputs, max_new_tokens=max_tokens, do_sample=do_sample)
         return self.tokenizer.batch_decode(generated_ids)[0]
+
+    def retrieve_answer(self,
+                        prompt: str,
+                        max_tokens: int = 100,
+                        do_sample: bool = True,
+                        prompt_template: PromptTemplate = PromptTemplate.ALPACA) -> str:
+        """
+        Sends a prompt to the LLM. You can specify the max. number of tokens to retrieve and if you do sampling when
+        generating the text.
+        :param prompt: the prompt to use
+        :param max_tokens: max tokens to receive
+        :param do_sample: apply stochastic selection of tokens to prevent always generating the same wording.
+        :param prompt_template: the answer usually comes inside the prompt itself, so we need to parse it, for which
+        we need the reference to the template used
+        :return: the answer
+        """
+        prompt_with_answer = self.__call__(prompt, max_tokens, do_sample)
+        response_placeholder = prompt_template.value['response']
+        index = prompt_with_answer.find(response_placeholder)
+        if index != -1:
+            return prompt_with_answer[index + len(response_placeholder):]
+        else:
+            return prompt_with_answer
+

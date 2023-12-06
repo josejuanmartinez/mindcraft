@@ -1,3 +1,4 @@
+from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.vectorstore.stores_types import StoresTypes
 from mindcraft.infra.sft.feedback import Feedback
 from mindcraft.features.motivation import Motivation
@@ -76,7 +77,7 @@ class NPC:
                 if mood == 'd':
                     mood = Mood.DEFAULT
                 mood = Mood(mood)
-                question = input(f"What could have been asked to {self._character_name} to answer that?:")
+                question = input(f"What could have been told to {self._character_name} to answer that?:")
                 if mood not in res_dict:
                     res_dict[mood.feature] = list()
                 res_dict[mood.feature].append(d)
@@ -119,7 +120,8 @@ class NPC:
                  min_similarity: float = 0.85,
                  ltm_num_results: int = 3,
                  world_num_results: int = 10,
-                 max_tokens: int = 250) -> tuple[str, Feedback]:
+                 max_tokens: int = 250,
+                 prompt_template=PromptTemplate.ALPACA) -> tuple[str, Feedback]:
         """
         Produces a reaction/answer to something you say to an NPC. It will use the lore of the world + the short memory
         + the long-term-memory + the personality, motivations and moods to generate a response.
@@ -128,6 +130,8 @@ class NPC:
         :param ltm_num_results: max number of results to retrieve from Long-term memory
         :param world_num_results: max number of results to retrieve from World Lore
         :param max_tokens: max_tokens of the answer
+        :param prompt_template: one of the PromptTemplates. Default: PromptTemplate.ALPACA (a bad prompt will lead to
+        bad answers. Always check in HuggingFace the name of the LLM in LLMType and which PromptTemplate it requires!)
         :return: a tuple with the text of the answer and a Feedback object, in case you want to use to review the answer
         and provide feedback to the model, for training future npc-based LLMs.
         """
@@ -154,10 +158,14 @@ class NPC:
                                personalities,
                                motivations,
                                conversational_style,
-                               mood)
+                               mood,
+                               prompt_template=prompt_template)
 
-        answer = World.get_instance().llm(prompt, max_tokens=max_tokens)
-        answer = answer[answer]
+        answer = World.retrieve_answer_from_llm(prompt,
+                                                max_tokens=max_tokens,
+                                                do_sample=True,
+                                                prompt_template=prompt_template)
+
         self._ltm.memorize(answer, self._mood)
         return answer, Feedback(self._character_name, self._mood, self._conversational_style, interaction, answer)
 

@@ -75,3 +75,7 @@ class Store:
         """
         raise NotImplementedError()
 
+    def delete_collection(self):
+        """ deletes a vector store from disk"""
+        raise NotImplementedError()
+

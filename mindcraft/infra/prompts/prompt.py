@@ -44,7 +44,7 @@ class Prompt:
                  f"Answer to the question of another character of your own world, given that you know some " \
                  f"details about that topic.\n"
         if mood is not None:
-            system += f"\n\nYour mood should affect how you express yourself. Your current mood is {mood}"
+            system += f"\n\nYou are right now very {mood}! Your answer should clearly show that feeling!"
 
         if len(personality) > 0:
             system += f"\n\nCreate your answers taking into account that you are a {','.join(personality)} character." \
@@ -67,5 +67,5 @@ class Prompt:
         system += "\n\nRemember you are a character talking to another character. You are not aware of the author " \
                   "/ writer of the book or lore. Always answer as a character of a book talking to another character."
 
-        return prompt_template.value.replace("{system}", system).replace("{prompt}", topic)
+        return prompt_template.value['prompt'].replace("{system}", system).replace("{prompt}", topic)
 

@@ -49,7 +49,7 @@ class SentenceTextSplitter(TextSplitter):
                 chunk.append(t)
                 if len(chunk) >= self.max_units:
                     for lc in last_chunk:
-                        yield "...."+lc
+                        yield lc
                     yield "\n".join(chunk)
                     for c in chunk:
                         last_chunk.append(c)
@@ -58,7 +58,7 @@ class SentenceTextSplitter(TextSplitter):
             if finish:
                 if len(chunk) > 0:
                     for lc in last_chunk:
-                        yield "..." + lc
+                        yield lc
                     yield "\n".join(chunk)
                     for c in chunk:
                         last_chunk.append(c)

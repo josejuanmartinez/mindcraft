@@ -1,4 +1,5 @@
 import settings
+from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.vectorstore.search_results import SearchResult
 from mindcraft.infra.splitters.sentence_text_splitter import SentenceTextSplitter
 from mindcraft.infra.splitters.token_text_splitter import TokenTextSplitter
@@ -26,8 +27,9 @@ class World:
         Not every NPC will know what happened in the world. Metadata will be used.
         :param world_id: the unique `id` of the character
         :param store: element of type StoresTypes
-        :param ltm_embeddings: Embeddings to use in LTM in the VectorS Store.
-        :param llm_type: Embeddings to use in LTM in the VectorS Store.
+        :param ltm_embeddings: Embeddings to use in LTM in the Vector Store.
+        :param llm_type: Embeddings to use in LTM in the Vector Store.
+        :param world_path: Custom path where to store the data of the world. If not set, falls back to WORLD_DATA_PATH
         """
         if 'world_name' not in kwargs:
             raise Exception("To instantiate a world, please add the name of the world in `world_name`")
@@ -60,6 +62,7 @@ class World:
             cls._instance._embeddings = kwargs.get('embeddings') if 'embeddings' in kwargs else EmbeddingsTypes.MINILM
             cls._instance._store_type = kwargs.get('store_type')
             cls._instance._llm_type = kwargs.get('llm_type') if 'llm_type' in kwargs else LLMType.ZEPHYR7B
+            cls._instance._world_data_path = kwargs.get('path') if 'path' in kwargs else WORLD_DATA_PATH
             cls._instance._llm = LLM(cls._instance._llm_type)
 
             match cls._instance._store_type.value:
@@ -70,7 +73,7 @@ class World:
                         raise Exception(f"To use `chromadb` as your vector store, please install it first using pip:\n"
                                         f"`pip install chromadb`")
 
-                    cls._instance._store = Chroma(WORLD_DATA_PATH,
+                    cls._instance._store = Chroma(cls._instance._world_data_path,
                                                   cls._instance._world_name,
                                                   cls._instance._embeddings)
                 case _:
@@ -133,6 +136,20 @@ class World:
         if self._instance is None:
             return
         self._instance._store = value
+
+    @property
+    def store_type(self):
+        """ Getter for the store_type property"""
+        if self._instance is None:
+            return None
+        return self._instance._store_type
+
+    @store_type.setter
+    def store_type(self, value: Store):
+        """ Setter for the store_type property"""
+        if self._instance is None:
+            return
+        self._instance._store_type = value
 
     @classmethod
     def is_created(cls) -> bool:
@@ -230,6 +247,37 @@ class World:
             print()
 
     @classmethod
+    def retrieve_answer_from_llm(cls,
+                                 prompt: str,
+                                 max_tokens: int = 100,
+                                 do_sample: bool = True,
+                                 prompt_template: PromptTemplate = PromptTemplate.ALPACA) -> str:
+        """
+        Sends a prompt to the LLM. You can specify the max. number of tokens to retrieve and if you do sampling when
+        generating the text.
+        :param prompt: the prompt to use
+        :param max_tokens: max tokens to receive
+        :param do_sample: apply stochastic selection of tokens to prevent always generating the same wording.
+        :param prompt_template: the answer usually comes inside the prompt itself, so we need to parse it, for which
+        we need the reference to the template used
+        :return: the answer
+        """
+        return cls._instance.llm.retrieve_answer(prompt, max_tokens, do_sample, prompt_template)
+
+    @classmethod
     def get_instance(cls):
         """ Returns the Singleton instance of the World"""
         return cls._instance
+
+    @classmethod
+    def delete_collection(cls):
+        match cls._instance.store_type.value:
+            case StoresTypes.CHROMA.value:
+                try:
+                    from mindcraft.infra.vectorstore.chroma import Chroma
+                except ImportError:
+                    raise Exception(f"To use `chromadb` as your vector store, please install it first using pip:\n"
+                                    f"`pip install chromadb`")
+                cls._instance.store.delete_collection()
+            case _:
+                raise NotImplementedError(f"{cls._instance.store_type} not implemented")

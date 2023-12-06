@@ -1,6 +1,7 @@
 from typing import Optional
 
 import chromadb
+from chromadb import Settings
 from chromadb.utils import embedding_functions
 
 from mindcraft.infra.vectorstore.search_results import SearchResult
@@ -24,7 +25,10 @@ class Chroma(Store):
         """
         Creation of the ChromaDB client persisting data to disk.
         """
-        return chromadb.PersistentClient(path=self.path)
+        return chromadb.PersistentClient(path=self.path, settings=Settings(allow_reset=True))
+
+    def shut_down(self):
+        self.client.reset()
 
     def create_or_get_collection(self):
         """
@@ -123,3 +127,8 @@ class Chroma(Store):
             if len(results['documents']) > 0:
                 result.documents = results['documents'][0]
         return result
+
+    def delete_collection(self):
+        """ deletes a vector store from disk"""
+        self.client.delete_collection(self.collection_name)
+        self.client.reset()
