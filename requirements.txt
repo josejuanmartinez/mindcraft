@@ -15,4 +15,4 @@ torchaudio
 # For token-based splitting of texts to be stored in the vector store:
 # tiktoken==0.5.1
 # For sentence-based splitting of texts:
-# spacy==3.6.7.2
+# spacy==3.7.0

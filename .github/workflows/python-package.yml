@@ -38,5 +38,5 @@ jobs:
     - name: Pytest with ChromaDB and Spacy Sentence Splitting
       run: |
         pip install chromadb==0.4.18
-        pip install spacy==3.6.7.2
+        pip install spacy==3.7.0
         python -m pytest
