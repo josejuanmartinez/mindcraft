@@ -7,6 +7,8 @@
 # MindCraft
 The open-source AI solution to craft the minds of your NPC characters for your video games.
 
+Requires Python 3.10 or higher.
+
 It includes the following features:
 
 - Text generation using LLMs (Mistral)
