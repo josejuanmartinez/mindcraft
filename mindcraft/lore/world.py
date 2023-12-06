@@ -1,4 +1,4 @@
-import settings
+from mindcraft import settings
 from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.vectorstore.search_results import SearchResult
 from mindcraft.infra.splitters.sentence_text_splitter import SentenceTextSplitter
