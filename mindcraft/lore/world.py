@@ -95,6 +95,20 @@ class World:
         self._instance._embeddings = value
 
     @property
+    def llm_type(self):
+        """ Getter for the llm_type property"""
+        if self._instance is None:
+            return None
+        return self._instance._llm_type
+
+    @llm_type.setter
+    def llm_type(self, value: LLMType):
+        """ Setter for the embeddings property"""
+        if self._instance is None:
+            return
+        self._instance._llm_type = value
+
+    @property
     def world_name(self):
         """ Getter for the world_name property"""
         if self._instance is None:
