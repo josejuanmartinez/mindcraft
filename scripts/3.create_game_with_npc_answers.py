@@ -25,7 +25,8 @@ def create_game_with_npc(world_name: str,
                          personalities: list[str],
                          motivations: list[str],
                          interaction: str,
-                         mood: str = None):
+                         mood: str = None,
+                         fast: bool = False):
     """ Example script to showcase how to instantiate a game with an NPC in it
     :param character_name: name of the character
     :param character_description: description of the character
@@ -34,13 +35,15 @@ def create_game_with_npc(world_name: str,
     :param motivations: list of strings describing the motivations of the NPC (e.g: "destroying the evil")
     :param interaction: question / topic you want the NPC to react on
     :param mood: string describing the current mood of the NPC (e.g: "angry". leave to None to fallback to default)
+    :param fast: use vLLM fast inference (requires vLLM running in docker)
     :return:
     """
     # World should have been instantiated with lore. See 1.import_book_to_world.py
     game = Game(world_name=world_name,
                 store_type=StoresTypes.CHROMA,
                 embeddings=EmbeddingsTypes.MINILM,
-                llm_type=LLMType.ZEPHYR7B)
+                llm_type=LLMType.MISTRAL7B,
+                fast=fast)
     personalities = [Personality(x) for x in personalities]
     motivations = [Motivation(x) for x in motivations]
     mood = Mood(mood)
@@ -74,6 +77,7 @@ if __name__ == "__main__":
     parser.add_argument('-m', '--motivation', action='append', nargs='*', help='Specify a name of a motivation or goal.'
                                                                                ' Example: Defender of their realm')
     parser.add_argument('-o', '--mood', nargs='?', help='Optional - Specify a current mood. Example: angry')
+    parser.add_argument('-f', '--fast', action='store_true', default=False)
     args = parser.parse_args()
     create_game_with_npc(args.world_name,
                          args.character_name,
@@ -81,4 +85,5 @@ if __name__ == "__main__":
                          [item for sublist in args.personality for item in sublist],
                          [item for sublist in args.motivation for item in sublist],
                          args.interaction,
-                         args.mood)
+                         args.mood,
+                         args.fast)

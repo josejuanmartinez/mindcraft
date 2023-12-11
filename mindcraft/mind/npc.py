@@ -164,7 +164,7 @@ class NPC:
         answer = World.retrieve_answer_from_llm(prompt,
                                                 max_tokens=max_tokens,
                                                 do_sample=True,
-                                                prompt_template=prompt_template)
+                                                prompt_template=prompt_template,)
 
         self._ltm.memorize(answer, self._mood)
         return answer, Feedback(self._character_name, self._mood, self._conversational_style, interaction, answer)
