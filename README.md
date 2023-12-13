@@ -99,7 +99,7 @@ What do you think about the rings of power?
 
 ```
 
-### Example of answer using Mistral 7B quantized to 4b
+### Example of answer using Zephyr 7B quantized to 4b
 ```
 ### Response:
 As Galadriel, I have seen the corruption that the Rings of Power have brought to those who possess them. They are a precious burden, a tool that can be both a blessing and a curse. The power they offer is seductive, but the cost is great. I have seen the lengths some will go to seek its allure - the darkness that it can awaken deep within their souls. For those with a weak heart, it serves as a shroud, veiling
@@ -148,12 +148,14 @@ Galadriel||grave||why he could say that?||....`He would be rash indeed that said
 ## CUDA and Torch
 Although torch is included in the `transformers` library as a dependency, if you see your gpu is not being
 utilized, try to run:
-- For Cuda 12.1, 12.2, 12.3:
 ```
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+pip3 install torch -i https://download.pytorch.org/whl/cu121
 ```
 <p align="center">
 <img 
   width="50%"
   src="https://github.com/josejuanmartinez/mindcraft/assets/36634572/7778d4a4-6b25-4b1a-9b26-b1bfa9d94727" alt="mindcraft architecture"/>
 </p>
+
+## Example data
+[Lord of the Rings](https://www.kaggle.com/datasets/ashishsinhaiitr/lord-of-the-rings-text)

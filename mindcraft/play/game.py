@@ -14,18 +14,21 @@ class Game:
                  world_name: str,
                  embeddings: EmbeddingsTypes,
                  store_type: StoresTypes,
-                 llm_type: LLMType):
+                 llm_type: LLMType,
+                 fast: bool = False):
         """
         Instantiate a session of our game, registering a World and accepting the creation of NPCs.
         :param world_name: the name of the world
         :param embeddings: one of the supported EmbeddingsTypes, which will be used to store the lore and interactions
         :param store_type: one of the supported StoresTypes vector store
         :param llm_type: one of the supported LLMType, which will manage the generation of NPC answers
+        :param fast: use vLLM fast inference (requires vLLM running in docker)
         """
         self.world = World(world_name=world_name,
                            embeddings=embeddings,
                            store_type=store_type,
-                           llm_type=llm_type)
+                           llm_type=llm_type,
+                           fast=fast)
         self.npc = dict()
 
     def book_to_world(self,
@@ -33,7 +36,8 @@ class Game:
                       text_splitter: TextSplitterTypes,
                       max_units: int,
                       overlap: int,
-                      known_by: list[str] = None):
+                      known_by: list[str] = None,
+                      encoding: str = 'utf-8'):
         """ Method that allows you to process txt files (e.g, books) and extract all the knowledge from it.
         You can set the names of the characters which you want to store this knowledge for. Otherwise, it will be
         known by all NPCs you instantiate.
@@ -48,8 +52,9 @@ class Game:
         parameter.
         :param known_by: a list of the name of the characters which will know about this lore. You acn leave it to None
         if this is a chronicle or something anyone knows or can easily know from the world.
+        :param encoding: encoding of the books
         """
-        self.world.book_to_world(book_path, text_splitter, max_units, overlap, known_by)
+        self.world.book_to_world(book_path, text_splitter, max_units, overlap, known_by, encoding)
 
     def add_npc(self,
                 character_id: str,

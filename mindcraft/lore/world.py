@@ -1,3 +1,4 @@
+
 from mindcraft import settings
 from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.vectorstore.search_results import SearchResult
@@ -6,10 +7,11 @@ from mindcraft.infra.splitters.token_text_splitter import TokenTextSplitter
 from mindcraft.infra.splitters.text_splitters_types import TextSplitterTypes
 from mindcraft.infra.vectorstore.stores_types import StoresTypes
 from mindcraft.infra.vectorstore.store import Store
-from mindcraft.infra.engine.llm import LLM
+from mindcraft.infra.engine.local_llm import LocalLLM
 from mindcraft.infra.engine.llm_types import LLMType
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
 from mindcraft.settings import SEPARATOR, LOGGER_FORMAT, WORLD_DATA_PATH, ALL
+from mindcraft.infra.engine.fast_llm import FastLLM
 
 import logging
 
@@ -30,6 +32,7 @@ class World:
         :param ltm_embeddings: Embeddings to use in LTM in the Vector Store.
         :param llm_type: Embeddings to use in LTM in the Vector Store.
         :param world_path: Custom path where to store the data of the world. If not set, falls back to WORLD_DATA_PATH
+        :param fast: use vLLM fast inference (requires vLLM running in docker)
         """
         if 'world_name' not in kwargs:
             raise Exception("To instantiate a world, please add the name of the world in `world_name`")
@@ -63,6 +66,7 @@ class World:
             cls._instance._store_type = kwargs.get('store_type')
             cls._instance._llm_type = kwargs.get('llm_type') if 'llm_type' in kwargs else LLMType.ZEPHYR7B
             cls._instance._world_data_path = kwargs.get('path') if 'path' in kwargs else WORLD_DATA_PATH
+            cls._instance._fast = kwargs.get('fast')
 
             match cls._instance._store_type.value:
                 case StoresTypes.CHROMA.value:
@@ -107,6 +111,20 @@ class World:
         if self._instance is None:
             return
         self._instance._llm_type = value
+
+    @property
+    def fast(self):
+        """ Getter for the llm_type property"""
+        if self._instance is None:
+            return None
+        return self._instance._fast
+
+    @fast.setter
+    def fast(self, value: bool):
+        """ Setter for the embeddings property"""
+        if self._instance is None:
+            return
+        self._instance._fast = value
 
     @property
     def world_name(self):
@@ -210,7 +228,8 @@ class World:
             text_splitter: TextSplitterTypes,
             max_units: int,
             overlap: int,
-            known_by: list[str] = None):
+            known_by: list[str] = None,
+            encoding='utf-8'):
         """
         Reads a file describing a world (a book, for example). Splits the text into small chunks and stores them
         in the world. You can use any of the text splitters available in TextSplitterTypes.
@@ -219,8 +238,9 @@ class World:
         :param known_by: known by characters. If None, `all` will be included
         :param overlap: number of units (tokens, sentences) to overlap with previous/next chunks
         :param max_units: number of units (tokens, sentences) to accumulate in a chunk
+        :param encoding: encoding of the books
         """
-        with open(book_path, 'r') as f:
+        with open(book_path, 'r', encoding=encoding) as f:
             book = f.read()
 
             match text_splitter:
@@ -261,7 +281,12 @@ class World:
         we need the reference to the template used
         :return: the answer
         """
-        return LLM(cls._instance.llm_type).retrieve_answer(prompt, max_tokens, do_sample, prompt_template)
+        if cls._instance.fast:
+            llm = FastLLM(cls._instance.llm_type)
+        else:
+            llm = LocalLLM(cls._instance.llm_type)
+
+        return llm.retrieve_answer(prompt, max_tokens, do_sample, prompt_template)
 
     @classmethod
     def get_instance(cls):

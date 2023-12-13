@@ -3,9 +3,11 @@ import os
 import argparse
 import logging
 
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from mindcraft.lore.world import World
+from mindcraft.infra.vectorstore.stores_types import StoresTypes
 from mindcraft.settings import LOGGER_FORMAT, DATE_FORMAT
 
 logging.basicConfig(format=LOGGER_FORMAT, datefmt=DATE_FORMAT, level=logging.INFO)
@@ -23,11 +25,10 @@ def query_book(world_name: str,
     :param known_by: filter by lore known only to specific NPCs. Leave it to none to retrieve common knowledge
     :return:
     """
-    world = World(world_name=world_name)
-    results = world.get_lore(topic, num_results, known_by)
+    world = World(world_name=world_name, store_type=StoresTypes.CHROMA)
+    results = world.get_lore(topic, num_results)
     for d in results.documents:
-        logger.info(d)
-        logger.info("\n")
+        print(d)
 
 
 if __name__ == "__main__":
@@ -35,10 +36,8 @@ if __name__ == "__main__":
         description='Retrieves from a processed book with `1.import_book_to_world.py`, a chronicle by a topic')
     parser.add_argument("world_name", help='The name of the book / world you processed with process_book')
     parser.add_argument("topic", help='The topic of the information you want to retrieve')
-    parser.add_argument('-n', '--num', type=int, help='Number of results to retrieve')
-    parser.add_argument('-k', '--known', type=str, help='Name of the NPC, to retrieve a chronicle only if they know it')
+    parser.add_argument('-n', '--num', type=int, default=5, help='Number of results to retrieve')
     args = parser.parse_args()
     query_book(args.world_name,
                args.topic,
-               args.num,
-               args.known)
+               args.num)

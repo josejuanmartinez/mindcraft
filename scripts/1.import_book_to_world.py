@@ -2,7 +2,7 @@ import argparse
 import sys
 import os
 
-from infra.engine.llm_types import LLMType
+from mindcraft.infra.engine.llm_types import LLMType
 from mindcraft.infra.splitters.text_splitters_types import TextSplitterTypes
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -26,7 +26,8 @@ def process_book(book_name: str, path: str):
     world.book_to_world(book_path=path,
                         text_splitter=TextSplitterTypes.SENTENCE_SPLITTER,
                         max_units=3,
-                        overlap=1)
+                        overlap=1,
+                        encoding='iso-8859-1')
 
 
 if __name__ == "__main__":

@@ -6,6 +6,8 @@ WORLD_DATA_PATH = os.path.join(DATA_PATH, 'world')
 LTM_DATA_PATH = os.path.join(DATA_PATH, 'ltm')
 STYLES_DATA_PATH = os.path.join(DATA_PATH, 'styles')
 
+FAST_INFERENCE_URL = "http://localhost:8000/generate"
+
 SEPARATOR = "||"
 ALL = 'all'
 
