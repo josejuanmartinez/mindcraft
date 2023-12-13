@@ -40,7 +40,7 @@ def create_game_with_npc(world_name: str,
     game = Game(world_name=world_name,
                 store_type=StoresTypes.CHROMA,
                 embeddings=EmbeddingsTypes.MINILM,
-                llm_type=LLMType.PHI15,
+                llm_type=LLMType.ZEPHYR7B_AWQ,
                 fast=False)
     personalities = [Personality(x) for x in personalities]
     motivations = [Motivation(x) for x in motivations]

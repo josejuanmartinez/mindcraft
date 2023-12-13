@@ -1,7 +1,3 @@
-import json
-
-import requests
-
 from mindcraft.infra.engine.llm import LLM
 from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.engine.llm_types import LLMType
@@ -16,6 +12,18 @@ class FastLLM(LLM):
         :param engine: one of the LLMType engines to use.
         """
         super().__init__(engine)
+        try:
+            from vllm import LLM, SamplingParams
+        except ImportError:
+            raise ImportError("`vllm` is required for Fast Inference. To install it, type:\n"
+                              "`pip install vllm`")
+
+        self.sampling_params = SamplingParams(temperature=0.8, top_p=0.95)
+        self.llm = LLM(model=self.engine.value,
+                       trust_remote_code=True,
+                       dtype='float16',
+                       quantization='awq',
+                       tokenizer_mode="auto")
 
     def __call__(self,
                  prompt: str,
@@ -30,17 +38,8 @@ class FastLLM(LLM):
         Default: true
         :return: the answer in a streaming fashion
         """
-        try:
-            from vllm import LLM, SamplingParams
-        except ImportError:
-            raise ImportError("`vllm` is required for Fast Inference. To install it, type:\n"
-                              "`pip install vllm`")
-
         prompts = [prompt]
-        sampling_params = SamplingParams(temperature=0.8, top_p=0.95)
-        # llm = LLM(model=self.engine.value, trust_remote_code=True, dtype='bfloat16', quantization='awq')
-        llm = LLM(model=self.engine.value, dtype='float16', trust_remote_code=True)
-        response = llm.generate(prompts, sampling_params)
+        response = self.llm.generate(prompts, self.sampling_params)
 
         return response[0].outputs[0].text
 
@@ -60,5 +59,3 @@ class FastLLM(LLM):
         :return: the answer
         """
         return self.__call__(prompt, max_tokens, do_sample)
-
-

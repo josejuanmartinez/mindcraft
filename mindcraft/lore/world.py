@@ -1,4 +1,4 @@
-
+from mindcraft.infra.engine.llm import LLM
 from mindcraft import settings
 from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.vectorstore.search_results import SearchResult
@@ -45,7 +45,7 @@ class World:
                            f"Initializing to {str(EmbeddingsTypes.MINILM.value)}")
 
         if 'llm_type' not in kwargs:
-            logger.warning(f"`llm_type` not found in World() initializer. Initializing to {LLMType.ZEPHYR7B}")
+            logger.warning(f"`llm_type` not found in World() initializer. Initializing to {LLMType.ZEPHYR7B_AWQ}")
 
         create_world = False
         destroying_world = False
@@ -64,9 +64,10 @@ class World:
             cls._instance._world_name = kwargs.get('world_name')
             cls._instance._embeddings = kwargs.get('embeddings') if 'embeddings' in kwargs else EmbeddingsTypes.MINILM
             cls._instance._store_type = kwargs.get('store_type')
-            cls._instance._llm_type = kwargs.get('llm_type') if 'llm_type' in kwargs else LLMType.ZEPHYR7B
+            cls._instance._llm_type = kwargs.get('llm_type') if 'llm_type' in kwargs else LLMType.ZEPHYR7B_AWQ
             cls._instance._world_data_path = kwargs.get('path') if 'path' in kwargs else WORLD_DATA_PATH
             cls._instance._fast = kwargs.get('fast')
+            cls._instance._llm = None
 
             match cls._instance._store_type.value:
                 case StoresTypes.CHROMA.value:
@@ -111,6 +112,19 @@ class World:
         if self._instance is None:
             return
         self._instance._llm_type = value
+    @property
+    def llm(self):
+        """ Getter for the llm_type property"""
+        if self._instance is None:
+            return None
+        return self._instance._llm
+
+    @llm.setter
+    def llm(self, value: LLM):
+        """ Setter for the embeddings property"""
+        if self._instance is None:
+            return
+        self._instance._llm = value
 
     @property
     def fast(self):
@@ -257,9 +271,9 @@ class World:
                 case _:
                     raise NotImplementedError(f"{str(text_splitter)} not implemented")
 
+            loading = ['|', '/', '-', '\\']
             for i, chunk in enumerate(text_splitter.split_text(book)):
-                print(".", end="")
-                # print(chunk)
+                print(f"\r{loading[i % len(loading)]}", end="")
                 cls.add_lore(chunk,
                              str(i),
                              known_by if known_by is not None else [ALL])
@@ -282,11 +296,13 @@ class World:
         :return: the answer
         """
         if cls._instance.fast:
-            llm = FastLLM(cls._instance.llm_type)
+            if cls._instance.llm is None:
+                cls._instance.llm = FastLLM(cls._instance.llm_type)
         else:
-            llm = LocalLLM(cls._instance.llm_type)
+            if cls._instance.llm is None:
+                cls._instance.llm = LocalLLM(cls._instance.llm_type)
 
-        return llm.retrieve_answer(prompt, max_tokens, do_sample, prompt_template)
+        return cls._instance.llm.retrieve_answer(prompt, max_tokens, do_sample, prompt_template)
 
     @classmethod
     def get_instance(cls):
