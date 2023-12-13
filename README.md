@@ -16,7 +16,10 @@ It includes the following features:
 - Knowledge and awareness about the world (RAG)
 - Short and Long-term memory (RAG)
 - Conversational styles
-- Supervised finetuning by human feedback
+- Supervised finetuning by human feedback (SFT)
+- Integration with vLLM for fast-inference (both local and Docker)
+- Usage of quantized AWQ models
+- Integration with API and RPC (to come!)
 
 ## Create a World from a book
 ```python
@@ -137,10 +140,10 @@ There are two loops integrated in the framework which allow you to create your o
 Galadriel||default||Good night, Galadriel!||'Good night, my friends! '\nsaid Galadriel. '\nSleep in peace!
 Galadriel||grave||why he could say that?||....`He would be rash indeed that said that thing,' said Galadriel gravely.
 ```
-## LLM integrated
-### Quantized (4b)
-- [TheBloke/zephyr-7B-beta-AWQ](https://huggingface.co/TheBloke/zephyr-7B-beta-AWQ)
-- [TheBloke/openinstruct-mistral-7B-AWQ](https://huggingface.co/TheBloke/openinstruct-mistral-7B-AWQ)
+## LLM integrated (4b quantization with AWQ)
+- TheBloke/openinstruct-mistral-7B-AWQ
+- TheBloke/zephyr-7B-beta-AWQ
+- TheBloke/dragon-yi-6B-v0-AWQ
 
 ## Embeddings for RAG
 - [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
@@ -156,6 +159,17 @@ pip3 install torch -i https://download.pytorch.org/whl/cu121
   width="50%"
   src="https://github.com/josejuanmartinez/mindcraft/assets/36634572/7778d4a4-6b25-4b1a-9b26-b1bfa9d94727" alt="mindcraft architecture"/>
 </p>
+
+## Fast Inference
+`vLLM` has been included for Fast Inference, in both local installation and installed using Docker.
+To use fast-inference, just run add `fast=True` to your `World` object:
+```python
+world = World(world_name="LordOfTheRings",
+              embeddings=EmbeddingsTypes.MINILM,
+              store_type=StoresTypes.CHROMA,
+              llm_type=LLMType.YI6B,
+              fast=True) # <---- HERE
+```
 
 ## Example data
 [Lord of the Rings](https://www.kaggle.com/datasets/ashishsinhaiitr/lord-of-the-rings-text)
