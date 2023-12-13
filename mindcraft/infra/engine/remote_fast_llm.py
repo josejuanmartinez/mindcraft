@@ -1,16 +1,17 @@
 import json
 
 import requests
-import settings
 
+from mindcraft import settings
+from mindcraft.infra.engine.fast_llm import FastLLM
 from mindcraft.infra.engine.llm import LLM
 from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.engine.llm_types import LLMType
 
 
-class FastLLM(LLM):
+class RemoveFastLLM(FastLLM):
     def __init__(self,
-                 engine: LLMType = LLMType.MISTRAL7B):
+                 engine: LLMType = LLMType.MISTRAL7B_AWQ):
         """
         Large Language Model class, in charge of executing a prompt and retrieving an answer for the LLM. Used to
         generate the answers of the NPCs.

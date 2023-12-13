@@ -4,9 +4,7 @@ autoawq==0.1.7
 pytest~=7.4.3
 requests~=2.31.0
 --extra-index-url https://download.pytorch.org/whl/cu121
-torch~=2.1.1+cu121
-torchvision
-torchaudio
+torch==2.1.1
 
 # VECTOR STORES OPTIONS:
 # For ChromaDB:

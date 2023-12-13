@@ -11,7 +11,7 @@ from mindcraft.infra.engine.local_llm import LocalLLM
 from mindcraft.infra.engine.llm_types import LLMType
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
 from mindcraft.settings import SEPARATOR, LOGGER_FORMAT, WORLD_DATA_PATH, ALL
-from mindcraft.infra.engine.serving.fast_llm import FastLLM
+from mindcraft.infra.engine.fast_llm import FastLLM
 
 import logging
 
@@ -228,7 +228,8 @@ class World:
             text_splitter: TextSplitterTypes,
             max_units: int,
             overlap: int,
-            known_by: list[str] = None):
+            known_by: list[str] = None,
+            encoding='utf-8'):
         """
         Reads a file describing a world (a book, for example). Splits the text into small chunks and stores them
         in the world. You can use any of the text splitters available in TextSplitterTypes.
@@ -237,8 +238,9 @@ class World:
         :param known_by: known by characters. If None, `all` will be included
         :param overlap: number of units (tokens, sentences) to overlap with previous/next chunks
         :param max_units: number of units (tokens, sentences) to accumulate in a chunk
+        :param encoding: encoding of the books
         """
-        with open(book_path, 'r') as f:
+        with open(book_path, 'r', encoding=encoding) as f:
             book = f.read()
 
             match text_splitter:

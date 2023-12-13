@@ -9,10 +9,10 @@ from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
 from mindcraft.memory.ltm import LTM
 from mindcraft.settings import LOGGER_FORMAT, DATE_FORMAT
 from mindcraft.features.mood import Mood
+from mindcraft.styles.conversational_style import ConversationalStyle
 
 import logging
 
-from styles.conversational_style import ConversationalStyle
 
 logging.basicConfig(format=LOGGER_FORMAT, datefmt=DATE_FORMAT, level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -143,8 +143,8 @@ class NPC:
                                          num_results=world_num_results,
                                          min_similarity=min_similarity).documents
 
-        personalities = [x.feature for x in self._personalities]
-        motivations = [x.feature for x in self._motivations]
+        personalities = [x.feature for x in self._personalities] if self._personalities is not None else []
+        motivations = [x.feature for x in self._motivations] if self._motivations is not None else []
         mood = self._mood.feature if self._mood is not None else Mood.DEFAULT
 
         conversational_style = self._conversational_style.retrieve_interaction_by_mood(mood).documents

@@ -36,7 +36,8 @@ class Game:
                       text_splitter: TextSplitterTypes,
                       max_units: int,
                       overlap: int,
-                      known_by: list[str] = None):
+                      known_by: list[str] = None,
+                      encoding: str = 'utf-8'):
         """ Method that allows you to process txt files (e.g, books) and extract all the knowledge from it.
         You can set the names of the characters which you want to store this knowledge for. Otherwise, it will be
         known by all NPCs you instantiate.
@@ -51,8 +52,9 @@ class Game:
         parameter.
         :param known_by: a list of the name of the characters which will know about this lore. You acn leave it to None
         if this is a chronicle or something anyone knows or can easily know from the world.
+        :param encoding: encoding of the books
         """
-        self.world.book_to_world(book_path, text_splitter, max_units, overlap, known_by)
+        self.world.book_to_world(book_path, text_splitter, max_units, overlap, known_by, encoding)
 
     def add_npc(self,
                 character_id: str,

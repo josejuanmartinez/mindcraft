@@ -6,7 +6,7 @@ from mindcraft.infra.engine.llm_types import LLMType
 
 class LLM:
     def __init__(self,
-                 model_name: LLMType = LLMType.MISTRAL7B):
+                 model_name: LLMType = LLMType.MISTRAL7B_AWQ):
         """
         Large Language Model class, in charge of executing a prompt and retrieving an answer for the LLM. Used to
         generate the answers of the NPCs.

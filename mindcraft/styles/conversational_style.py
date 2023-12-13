@@ -2,7 +2,7 @@ from mindcraft.infra.vectorstore.search_results import SearchResult
 from mindcraft.features.mood import Mood
 from mindcraft.infra.vectorstore.stores_types import StoresTypes
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
-from settings import STYLES_DATA_PATH
+from mindcraft.settings import STYLES_DATA_PATH
 
 
 class ConversationalStyle:

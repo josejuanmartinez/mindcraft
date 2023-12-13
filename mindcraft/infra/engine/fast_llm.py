@@ -1,25 +1,21 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
+import json
+
+import requests
 
 from mindcraft.infra.engine.llm import LLM
 from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.engine.llm_types import LLMType
 
 
-class LocalLLM(LLM):
+class FastLLM(LLM):
     def __init__(self,
-                 model_name: LLMType = LLMType.MISTRAL7B_AWQ):
+                 engine: LLMType = LLMType.MISTRAL7B_AWQ):
         """
         Large Language Model class, in charge of executing a prompt and retrieving an answer for the LLM. Used to
         generate the answers of the NPCs.
-        :param model_name: one of the LLMType engines to use.
+        :param engine: one of the LLMType engines to use.
         """
-        super().__init__(model_name)
-        self.model = AutoModelForCausalLM.from_pretrained(model_name.value,
-                                                          device_map=self.device,
-                                                          trust_remote_code=True)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name.value,
-                                                       device_map=self.device,
-                                                       trust_remote_code=True)
+        super().__init__(engine)
 
     def __call__(self,
                  prompt: str,
@@ -32,13 +28,21 @@ class LocalLLM(LLM):
         :param max_tokens: max tokens to receive
         :param do_sample: apply stochastic selection of tokens to prevent always generating the same wording.
         Default: true
-        :return: the answer
+        :return: the answer in a streaming fashion
         """
-        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(self.device)
-        self.model.to(self.device)
+        try:
+            from vllm import LLM, SamplingParams
+        except ImportError:
+            raise ImportError("`vllm` is required for Fast Inference. To install it, type:\n"
+                              "`pip install vllm`")
 
-        generated_ids = self.model.generate(**model_inputs, max_new_tokens=max_tokens, do_sample=do_sample)
-        return self.tokenizer.batch_decode(generated_ids)[0]
+        prompts = [prompt]
+        sampling_params = SamplingParams(temperature=0.8, top_p=0.95)
+        # llm = LLM(model=self.engine.value, trust_remote_code=True, dtype='bfloat16', quantization='awq')
+        llm = LLM(model=self.engine.value, dtype='float16', trust_remote_code=True)
+        response = llm.generate(prompts, sampling_params)
+
+        return response[0].outputs[0].text
 
     def retrieve_answer(self,
                         prompt: str,
@@ -55,10 +59,6 @@ class LocalLLM(LLM):
         we need the reference to the template used
         :return: the answer
         """
-        prompt_with_answer = self.__call__(prompt, max_tokens, do_sample)
-        response_placeholder = prompt_template.value['response']
-        index = prompt_with_answer.find(response_placeholder)
-        if index != -1:
-            return prompt_with_answer[index + len(response_placeholder):]
-        else:
-            return prompt_with_answer
+        return self.__call__(prompt, max_tokens, do_sample)
+
+
