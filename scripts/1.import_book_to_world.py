@@ -21,7 +21,7 @@ def process_book(book_name: str, path: str):
     world = World(world_name=book_name,
                   embeddings=EmbeddingsTypes.MINILM,
                   store_type=StoresTypes.CHROMA,
-                  llm_type=LLMType.ZEPHYR7B)
+                  llm_type=LLMType.ZEPHYR7B_AWQ)
 
     world.book_to_world(book_path=path,
                         text_splitter=TextSplitterTypes.SENTENCE_SPLITTER,

@@ -121,15 +121,17 @@ class NPC:
                  ltm_num_results: int = 3,
                  world_num_results: int = 10,
                  max_tokens: int = 250,
+                 temperature: float = 0.8,
                  prompt_template=PromptTemplate.ALPACA) -> tuple[str, Feedback]:
         """
         Produces a reaction/answer to something you say to an NPC. It will use the lore of the world + the short memory
         + the long-term-memory + the personality, motivations and moods to generate a response.
         :param interaction: the interaction / question you tell/ask the NPC
-        :param min_similarity: minimum similarity score to filter out irrrelevant information
+        :param min_similarity: minimum similarity score to filter out irrelevant information
         :param ltm_num_results: max number of results to retrieve from Long-term memory
         :param world_num_results: max number of results to retrieve from World Lore
         :param max_tokens: max_tokens of the answer
+        :param temperature: temperature or how creative the answer should be
         :param prompt_template: one of the PromptTemplates. Default: PromptTemplate.ALPACA (a bad prompt will lead to
         bad answers. Always check in HuggingFace the name of the LLM in LLMType and which PromptTemplate it requires!)
         :return: a tuple with the text of the answer and a Feedback object, in case you want to use to review the answer
@@ -161,10 +163,13 @@ class NPC:
                                mood,
                                prompt_template=prompt_template)
 
+        logger.info(prompt)
+
         answer = World.retrieve_answer_from_llm(prompt,
                                                 max_tokens=max_tokens,
                                                 do_sample=True,
-                                                prompt_template=prompt_template,)
+                                                temperature=temperature,
+                                                prompt_template=prompt_template)
 
         self._ltm.memorize(answer, self._mood)
         return answer, Feedback(self._character_name, self._mood, self._conversational_style, interaction, answer)
@@ -190,3 +195,13 @@ class NPC:
     def conversational_style(self):
         """ Getter of the `conversational_style` property"""
         return self._conversational_style
+
+    def add_npc_to_world(self):
+        """
+        Instantiate an NPC in the world. After the moment you instantiate the NPC, it will be available for you to
+        interact with them and will remember (store) all conversations.
+        """
+        if World.get_instance() is None:
+            raise Exception("World not found. Please instantiate a ´World´ first.")
+
+        World.get_instance().npcs[self.character_name] = self

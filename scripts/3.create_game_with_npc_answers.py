@@ -5,15 +5,15 @@ import logging
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-
+from mindcraft.mind.npc import NPC
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
 from mindcraft.infra.engine.llm_types import LLMType
 from mindcraft.infra.vectorstore.stores_types import StoresTypes
 from mindcraft.features.motivation import Motivation
 from mindcraft.features.personality import Personality
-from mindcraft.play.game import Game
 from mindcraft.settings import LOGGER_FORMAT, DATE_FORMAT
 from mindcraft.features.mood import Mood
+from mindcraft.lore.world import World
 
 logging.basicConfig(format=LOGGER_FORMAT, datefmt=DATE_FORMAT, level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,28 +37,32 @@ def create_game_with_npc(world_name: str,
     :return:
     """
     # World should have been instantiated with lore. See 1.import_book_to_world.py
-    game = Game(world_name=world_name,
-                store_type=StoresTypes.CHROMA,
-                embeddings=EmbeddingsTypes.MINILM,
-                llm_type=LLMType.ZEPHYR7B_AWQ,
-                fast=False)
+    world = World(world_name=world_name,
+                  store_type=StoresTypes.CHROMA,
+                  embeddings=EmbeddingsTypes.MINILM,
+                  llm_type=LLMType.ZEPHYR7B_AWQ,
+                  fast=False)
+
     personalities = [Personality(x) for x in personalities]
     motivations = [Motivation(x) for x in motivations]
     mood = Mood(mood)
 
-    npc = game.add_npc(character_name,
-                       character_description,
-                       personalities,
-                       motivations,
-                       StoresTypes.CHROMA,
-                       mood,
-                       EmbeddingsTypes.MINILM)
+    npc = NPC(character_name,
+              character_description,
+              personalities,
+              motivations,
+              mood,
+              StoresTypes.CHROMA,
+              EmbeddingsTypes.MINILM)
+
+    npc.add_npc_to_world()
 
     answer, _ = npc.react_to(interaction,
                              min_similarity=0.85,
                              ltm_num_results=3,
                              world_num_results=7,
-                             max_tokens=200)
+                             max_tokens=200,
+                             temperature=0.4)
 
     print(answer)
 

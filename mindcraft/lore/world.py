@@ -1,5 +1,7 @@
-from mindcraft.infra.engine.llm import LLM
+from typing import Type
+
 from mindcraft import settings
+from mindcraft.infra.engine.llm import LLM
 from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.vectorstore.search_results import SearchResult
 from mindcraft.infra.splitters.sentence_text_splitter import SentenceTextSplitter
@@ -10,8 +12,9 @@ from mindcraft.infra.vectorstore.store import Store
 from mindcraft.infra.engine.local_llm import LocalLLM
 from mindcraft.infra.engine.llm_types import LLMType
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
-from mindcraft.settings import SEPARATOR, LOGGER_FORMAT, WORLD_DATA_PATH, ALL
+from mindcraft.infra.engine.remote_fast_llm import RemoteFastLLM
 from mindcraft.infra.engine.fast_llm import FastLLM
+from mindcraft.settings import SEPARATOR, LOGGER_FORMAT, WORLD_DATA_PATH, ALL
 
 import logging
 
@@ -33,6 +36,8 @@ class World:
         :param llm_type: Embeddings to use in LTM in the Vector Store.
         :param world_path: Custom path where to store the data of the world. If not set, falls back to WORLD_DATA_PATH
         :param fast: use vLLM fast inference (requires vLLM running in docker)
+        :param fast: use vLLM fast inference in cases vLLM is not in local but served in an external server.
+         In this case, an HTTP connection will be established
         """
         if 'world_name' not in kwargs:
             raise Exception("To instantiate a world, please add the name of the world in `world_name`")
@@ -43,6 +48,12 @@ class World:
         if 'embeddings' not in kwargs:
             logger.warning("`embeddings` not found in World() initializer. "
                            f"Initializing to {str(EmbeddingsTypes.MINILM.value)}")
+
+        if 'fast' in kwargs and not isinstance(kwargs.get('fast'), bool):
+            raise Exception("The value for `fast` param should be True or False")
+
+        if 'remote' in kwargs and not isinstance(kwargs.get('fast'), bool):
+            raise Exception("The value for `remote` param should be True or False")
 
         if 'llm_type' not in kwargs:
             logger.warning(f"`llm_type` not found in World() initializer. Initializing to {LLMType.ZEPHYR7B_AWQ}")
@@ -67,7 +78,9 @@ class World:
             cls._instance._llm_type = kwargs.get('llm_type') if 'llm_type' in kwargs else LLMType.ZEPHYR7B_AWQ
             cls._instance._world_data_path = kwargs.get('path') if 'path' in kwargs else WORLD_DATA_PATH
             cls._instance._fast = kwargs.get('fast')
+            cls._instance._remote = kwargs.get('remote')
             cls._instance._llm = None
+            cls._instance._npcs = dict()
 
             match cls._instance._store_type.value:
                 case StoresTypes.CHROMA.value:
@@ -108,10 +121,11 @@ class World:
 
     @llm_type.setter
     def llm_type(self, value: LLMType):
-        """ Setter for the embeddings property"""
+        """ Setter for the llm_type property"""
         if self._instance is None:
             return
         self._instance._llm_type = value
+
     @property
     def llm(self):
         """ Getter for the llm_type property"""
@@ -121,21 +135,49 @@ class World:
 
     @llm.setter
     def llm(self, value: LLM):
-        """ Setter for the embeddings property"""
+        """ Setter for the llm_type property"""
         if self._instance is None:
             return
         self._instance._llm = value
 
     @property
+    def npcs(self):
+        """ Getter for the npcs property"""
+        if self._instance is None:
+            return None
+        return self._instance._npcs
+
+    @npcs.setter
+    def npcs(self, value: Type['NPC']):
+        """ Setter for the npcs property"""
+        if self._instance is None:
+            return
+        self._instance._npcs = value
+
+    @property
     def fast(self):
-        """ Getter for the llm_type property"""
+        """ Getter for the fast property"""
         if self._instance is None:
             return None
         return self._instance._fast
 
     @fast.setter
     def fast(self, value: bool):
-        """ Setter for the embeddings property"""
+        """ Setter for the fast property"""
+        if self._instance is None:
+            return
+        self._instance._fast = value
+
+    @property
+    def remote(self):
+        """ Getter for the remote property"""
+        if self._instance is None:
+            return None
+        return self._instance._fast
+
+    @remote.setter
+    def remote(self, value: bool):
+        """ Setter for the remote property"""
         if self._instance is None:
             return
         self._instance._fast = value
@@ -284,6 +326,7 @@ class World:
                                  prompt: str,
                                  max_tokens: int = 100,
                                  do_sample: bool = True,
+                                 temperature: float = 0.8,
                                  prompt_template: PromptTemplate = PromptTemplate.ALPACA) -> str:
         """
         Sends a prompt to the LLM. You can specify the max. number of tokens to retrieve and if you do sampling when
@@ -291,16 +334,20 @@ class World:
         :param prompt: the prompt to use
         :param max_tokens: max tokens to receive
         :param do_sample: apply stochastic selection of tokens to prevent always generating the same wording.
+        :param temperature: temperature or how creative the answer should be
         :param prompt_template: the answer usually comes inside the prompt itself, so we need to parse it, for which
         we need the reference to the template used
         :return: the answer
         """
         if cls._instance.fast:
             if cls._instance.llm is None:
-                cls._instance.llm = FastLLM(cls._instance.llm_type)
+                if cls._instance.remote:
+                    cls._instance.llm = RemoteFastLLM(cls._instance.llm_type, temperature)
+                else:
+                    cls._instance.llm = FastLLM(cls._instance.llm_type, temperature)
         else:
             if cls._instance.llm is None:
-                cls._instance.llm = LocalLLM(cls._instance.llm_type)
+                cls._instance.llm = LocalLLM(cls._instance.llm_type, temperature)
 
         return cls._instance.llm.retrieve_answer(prompt, max_tokens, do_sample, prompt_template)
 

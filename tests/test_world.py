@@ -29,7 +29,7 @@ def test_create_world(tmp_path):
     world = World(world_name="TheAgeOfSigmur",
                   embeddings=EmbeddingsTypes.MINILM,
                   store_type=StoresTypes.CHROMA,
-                  llm_type=LLMType.ZEPHYR7B,
+                  llm_type=LLMType.ZEPHYR7B_AWQ,
                   path=tmp_path)
 
     assert world is not None
@@ -42,7 +42,7 @@ def test_import_book_to_world(tmp_path):
     world = World(world_name="TheAgeOfSigmur",
                   embeddings=EmbeddingsTypes.MINILM,
                   store_type=StoresTypes.CHROMA,
-                  llm_type=LLMType.ZEPHYR7B,
+                  llm_type=LLMType.ZEPHYR7B_AWQ,
                   path=tmp_path)
 
     with open(temp_file, 'w') as file:
@@ -60,7 +60,7 @@ def test_import_book_to_world_and_get_lore(temp_file):
     world = World(world_name="TheAgeOfSigmur",
                   embeddings=EmbeddingsTypes.MINILM,
                   store_type=StoresTypes.CHROMA,
-                  llm_type=LLMType.ZEPHYR7B)
+                  llm_type=LLMType.ZEPHYR7B_AWQ)
 
     with open(temp_file, 'w') as file:
         file.write("In the age of Sigmur, everyone in the world is a zombie!")

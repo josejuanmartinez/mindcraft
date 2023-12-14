@@ -41,31 +41,55 @@ class Prompt:
         """
 
         system = f"You are {character_name}, a character from the world of {world_name}. " \
-                 f"Answer to the question of another character of your own world, given that you know some " \
-                 f"details about that topic.\n"
-        if mood is not None:
-            system += f"\n\nYou are right now very {mood}! Your answer should clearly show that feeling!"
+                 f"Provide an answer to an interaction in form of a quote of something said by yourself," \
+                 f"using only the LORE about that topic and you have some MEMORIES that I provide."
 
-        if len(personality) > 0:
-            system += f"\n\nCreate your answers taking into account that you are a {','.join(personality)} character." \
-                      f" Reformulate your answer adding that features of your personality into them."""
-        if len(motivations) > 0:
-            system += f"\n\nAlso, you have several goals and motivations in life, namely: {','.join(motivations)}." \
-                      f" Take them into account to reformulate your answers guiding them towards your motivations."
+        system += f"\n\nLORE:\n"
         if len(world_knowledge) > 0:
-            system += f"\n1) From books, chronicles, and stories known by you and other people about the world," \
-                      f" you know that: {NL.join(world_knowledge)[:500]}"
+            system += NL.join(world_knowledge)[:500]
+        else:
+            system += "(you don't know anything about the topic)"
+
+        system += f"\n\nMEMORIES:\n"
         if len(ltm) > 0:
-            system += f"\n2) Also, you have some memories about this topic which happened personally to you " \
-                      f"{NL.join(ltm)}"
+            system += NL.join(ltm)[:500]
+        else:
+            system += "(you don't remember past conversations about the topic)"
 
+        system += f"\n\nPERSONALITY:\n"
+        if len(personality) > 0:
+            system += f"You are {','.join(personality)}." \
+                      f"Your answer should clearly show those personality features!"
+        else:
+            system += "(you don't have any specific personality feature)"
+
+        system += f"\n\nMOTIVATIONS:\n"
+        if len(motivations) > 0:
+            system += f"Guide your answer towards those motivations: {','.join(motivations)}."
+        else:
+            system += "(you don't have any specific motivation)"
+
+        system += f"\n\nMOOD:\n"
+        if mood is not None:
+            system += f"You are right now very {mood}! Your answer should clearly express that feeling!"
+        else:
+            system += "You are in a normal mood"
+
+        system += f"\n\nEXAMPLE OF HOW YOU TALK:\n"
         if len(conversational_style) > 0:
-            system += f"\n\nAn example of how you talk with your actual mood about other topics is the following " \
-                      f"(mimic the style but ignore the content as it is for other topic):" \
-                      f" {NL.join(conversational_style)[:500]}"
+            system += f"Mimic the style of this conversation, but don't use the content of this in your answer\n" \
+                      f"{NL.join(conversational_style)[:500]}"
+        else:
+            system += f"(no past examples of conversations found)"
 
-        system += "\n\nRemember you are a character talking to another character. You are not aware of the author " \
-                  "/ writer of the book or lore. Always answer as a character of a book talking to another character."
+        system += "\n\nAnd finally, remember:\n" \
+                  f"- Your name is {character_name};\n" \
+                  "- You are a character talking to another character.\n" \
+                  "- Don't mention any writer or real character outside your fictional world!\n" \
+                  "- Always answer as a character of a book talking to another character of that book.\n" \
+                  "- You can't add or make up any new information. You can only use the LORE provided to you.\n" \
+                  "- Influence your answer by the MOOD, PERSONALITY, MOTIVATION if provided.\n" \
+                  "- Only write the quote of what you say,you can't add anything except words from your mouth!\n" \
+                  "- Don't include anything except the quote, don't analyse, don't comment, just return the quote!" \
 
         return prompt_template.value['prompt'].replace("{system}", system).replace("{prompt}", topic)
-

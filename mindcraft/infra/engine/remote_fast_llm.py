@@ -4,20 +4,21 @@ import requests
 
 from mindcraft import settings
 from mindcraft.infra.engine.fast_llm import FastLLM
-from mindcraft.infra.engine.llm import LLM
 from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.engine.llm_types import LLMType
 
 
-class RemoveFastLLM(FastLLM):
+class RemoteFastLLM(FastLLM):
     def __init__(self,
-                 engine: LLMType = LLMType.MISTRAL7B_AWQ):
+                 engine: LLMType = LLMType.ZEPHYR7B_AWQ,
+                 temperature: float = 0.8):
         """
         Large Language Model class, in charge of executing a prompt and retrieving an answer for the LLM. Used to
         generate the answers of the NPCs.
         :param engine: one of the LLMType engines to use.
+        :param temperature: temperature to use in generation
         """
-        super().__init__(engine)
+        super().__init__(engine, temperature)
 
     def __call__(self,
                  prompt: str,
@@ -37,7 +38,8 @@ class RemoveFastLLM(FastLLM):
             "prompt": prompt,
             "stream": False,
             "max_tokens": max_tokens,
-            "use_beam_search": not do_sample
+            "use_beam_search": not do_sample,
+            "temperature": self.temperature
         }
         response = requests.post(settings.FAST_INFERENCE_URL,
                                  headers=headers,
@@ -69,9 +71,7 @@ class RemoveFastLLM(FastLLM):
         we need the reference to the template used
         :return: the answer
         """
-        return self.__call__(prompt, max_tokens, do_sample)
-        """for elem in self.__call__(prompt, max_tokens, do_sample):
-            print(elem, end='')
-            yield elem
-        print()"""
+        prompt_with_answer = self.__call__(prompt, max_tokens, do_sample)
+        response_placeholder = prompt_template.value['response']
+        return self.clean(prompt_with_answer, response_placeholder)
 

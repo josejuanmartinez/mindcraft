@@ -1,3 +1,4 @@
+import re
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from mindcraft.infra.engine.llm import LLM
@@ -7,13 +8,15 @@ from mindcraft.infra.engine.llm_types import LLMType
 
 class LocalLLM(LLM):
     def __init__(self,
-                 model_name: LLMType = LLMType.MISTRAL7B_AWQ):
+                 model_name: LLMType = LLMType.ZEPHYR7B_AWQ,
+                 temperature: float = 0.8):
         """
         Large Language Model class, in charge of executing a prompt and retrieving an answer for the LLM. Used to
         generate the answers of the NPCs.
         :param model_name: one of the LLMType engines to use.
+        :param temperature: temperature to use in generation
         """
-        super().__init__(model_name)
+        super().__init__(model_name, temperature)
         self.model = AutoModelForCausalLM.from_pretrained(model_name.value,
                                                           device_map=self.device,
                                                           trust_remote_code=True)
@@ -37,7 +40,9 @@ class LocalLLM(LLM):
         model_inputs = self.tokenizer([prompt], return_tensors="pt").to(self.device)
         self.model.to(self.device)
 
-        generated_ids = self.model.generate(**model_inputs, max_new_tokens=max_tokens, do_sample=do_sample)
+        generated_ids = self.model.generate(**model_inputs,
+                                            max_new_tokens=max_tokens,
+                                            do_sample=do_sample)
         return self.tokenizer.batch_decode(generated_ids)[0]
 
     def retrieve_answer(self,
@@ -57,8 +62,5 @@ class LocalLLM(LLM):
         """
         prompt_with_answer = self.__call__(prompt, max_tokens, do_sample)
         response_placeholder = prompt_template.value['response']
-        index = prompt_with_answer.find(response_placeholder)
-        if index != -1:
-            return prompt_with_answer[index + len(response_placeholder):]
-        else:
-            return prompt_with_answer
+        return self.clean(prompt_with_answer, response_placeholder)
+

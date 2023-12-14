@@ -39,16 +39,16 @@ def create_feedback_for_npc_style(world_name: str,
     game = Game(world_name=world_name,
                 store_type=StoresTypes.CHROMA,
                 embeddings=EmbeddingsTypes.MINILM,
-                llm_type=LLMType.ZEPHYR7B)
+                llm_type=LLMType.ZEPHYR7B_AWQ)
     personalities = [Personality(x) for x in personalities]
     motivations = [Motivation(x) for x in motivations]
 
-    npc = game.add_npc(character_name,
-                       character_description,
-                       personalities,
-                       motivations,
-                       StoresTypes.CHROMA,
-                       ltm_embeddings=EmbeddingsTypes.MINILM)
+    npc = game.add_npc_to_world(character_name,
+                                character_description,
+                                personalities,
+                                motivations,
+                                StoresTypes.CHROMA,
+                                ltm_embeddings=EmbeddingsTypes.MINILM)
 
     logger.info(f"Extracting conversations of {character_name} from the world...")
     npc.extract_conversational_styles_from_world()

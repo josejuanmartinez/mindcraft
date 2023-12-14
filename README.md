@@ -45,6 +45,7 @@ Once a world has been created and populated with lore, query the lore known by N
 
 ## Instantiate an NPC in a world
 Once a world has been created and populated with lore, instantiate an NPC in it by doing:
+
 ```python
 game = Game(world_name=world_name,
             store_type=StoresTypes.CHROMA,
@@ -53,17 +54,17 @@ game = Game(world_name=world_name,
 
 character_name = "YOUR_CHARACTER_NAME"
 character_description = "YOUR_CHARACTER_DESCRIPTION"
-personalities = [Personality(x) for x in ['personality_1', ..., 'personality_n',]]
-motivations = [Motivation(x) for x in ['motivation_1', ..., 'motivation_n',]]
+personalities = [Personality(x) for x in ['personality_1', ..., 'personality_n', ]]
+motivations = [Motivation(x) for x in ['motivation_1', ..., 'motivation_n', ]]
 mood = Mood("CURRENT_MOOD")
 
-npc = game.add_npc(character_name,
-                   character_description,
-                   personalities,
-                   motivations,
-                   StoresTypes.CHROMA,
-                   mood,
-                   EmbeddingsTypes.MINILM)
+npc = game.add_npc_to_world(character_name,
+                            character_description,
+                            personalities,
+                            motivations,
+                            StoresTypes.CHROMA,
+                            mood,
+                            EmbeddingsTypes.MINILM)
 
 interaction = "YOUR_QUESTION"
 
@@ -115,25 +116,25 @@ There are two loops integrated in the framework which allow you to create your o
 
 ```python
   # World should have been instantiated with lore. See 1.import_book_to_world.py
-    game = Game(world_name=world_name,
-                store_type=StoresTypes.CHROMA,
-                embeddings=EmbeddingsTypes.MINILM,
-                llm_type=LLMType.ZEPHYR7B)
-    personalities = [Personality(x) for x in personalities]
-    motivations = [Motivation(x) for x in motivations]
+game = Game(world_name=world_name,
+            store_type=StoresTypes.CHROMA,
+            embeddings=EmbeddingsTypes.MINILM,
+            llm_type=LLMType.ZEPHYR7B)
+personalities = [Personality(x) for x in personalities]
+motivations = [Motivation(x) for x in motivations]
 
-    npc = game.add_npc(character_name,
-                       character_description,
-                       personalities,
-                       motivations,
-                       StoresTypes.CHROMA,
-                       ltm_embeddings=EmbeddingsTypes.MINILM)
+npc = game.add_npc_to_world(character_name,
+                            character_description,
+                            personalities,
+                            motivations,
+                            StoresTypes.CHROMA,
+                            ltm_embeddings=EmbeddingsTypes.MINILM)
 
-    logger.info(f"Extracting conversations of {character_name} from the world...")
-    npc.extract_conversational_styles_from_world()
+logger.info(f"Extracting conversations of {character_name} from the world...")
+npc.extract_conversational_styles_from_world()
 
-    logger.info(f"Generating conversations by talking to you!")
-    npc.extract_conversational_styles_talking_to_user()
+logger.info(f"Generating conversations by talking to you!")
+npc.extract_conversational_styles_talking_to_user()
 ```
 ### Example of supervised finetuning dataset
 ```csv

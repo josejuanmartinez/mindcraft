@@ -28,13 +28,17 @@ class Chroma(Store):
         return chromadb.PersistentClient(path=self.path, settings=Settings(allow_reset=True))
 
     def shut_down(self):
+        """
+        Shuts down Chroma DB
+        """
         self.client.reset()
 
     def create_or_get_collection(self):
         """
         ChromaDB abstraction to retrieve a collection if already exists, or create it otherwise.
         """
-        return self.client.get_or_create_collection(name=self.collection_name)
+        joint_name = ''.join(word.capitalize() for word in self.collection_name.split())
+        return self.client.get_or_create_collection(name=joint_name)
 
     def get_embeddings(self, text):
         """
