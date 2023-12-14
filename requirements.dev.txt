@@ -1,2 +1,5 @@
 build==1.0.3
 pytest~=7.4.3
+twine==4.0.2
+setuptools~=69.0.2
+wheel==0.42.0
