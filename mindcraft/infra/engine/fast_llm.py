@@ -21,7 +21,7 @@ class FastLLM(LLM):
                               "`pip install vllm`")
 
         self.sampling_params = SamplingParams(temperature=self.temperature)
-        self.llm = LLM(model=self.engine.value,
+        self.llm = LLM(model=self.llm_type.value['name'],
                        trust_remote_code=True,
                        dtype='float16',
                        quantization='awq',
@@ -48,18 +48,15 @@ class FastLLM(LLM):
     def retrieve_answer(self,
                         prompt: str,
                         max_tokens: int = 100,
-                        do_sample: bool = True,
-                        prompt_template: PromptTemplate = PromptTemplate.ALPACA) -> str:
+                        do_sample: bool = True) -> str:
         """
         Sends a prompt to the LLM. You can specify the max. number of tokens to retrieve and if you do sampling when
         generating the text.
         :param prompt: the prompt to use
         :param max_tokens: max tokens to receive
         :param do_sample: apply stochastic selection of tokens to prevent always generating the same wording.
-        :param prompt_template: the answer usually comes inside the prompt itself, so we need to parse it, for which
-        we need the reference to the template used
         :return: the answer
         """
         prompt_with_answer = self.__call__(prompt, max_tokens, do_sample)
-        response_placeholder = prompt_template.value['response']
+        response_placeholder = self.llm_type.value['template'].value['response']
         return self.clean(prompt_with_answer, response_placeholder)

@@ -1,4 +1,5 @@
-from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
+from mindcraft.memory.summarizer_types import SummarizerTypes
+from mindcraft.memory.stm import STM
 from mindcraft.infra.vectorstore.stores_types import StoresTypes
 from mindcraft.infra.sft.feedback import Feedback
 from mindcraft.features.motivation import Motivation
@@ -26,7 +27,11 @@ class NPC:
                  motivations: list[Motivation],
                  mood: Mood,
                  store_type: StoresTypes,
-                 ltm_embeddings: EmbeddingsTypes = EmbeddingsTypes.MINILM):
+                 ltm_embeddings: EmbeddingsTypes = EmbeddingsTypes.MINILM,
+                 stm_capacity: int = 5,
+                 stm_summarizer: SummarizerTypes = SummarizerTypes.T5_SMALL,
+                 stm_max_summary_length: int = 230,
+                 stm_min_summary_length: int = 30):
         """
         A class managing the Non-player Character, including short-term, long-term memory, backgrounds, motivations
         to create the answer.
@@ -38,10 +43,15 @@ class NPC:
         :param mood: current mood of the character. They can change over the time.
         :param store_type: VectorStore from StoresTypes you prefer to use.
         :param ltm_embeddings: embeddings from EmbeddingsTypes you prefer to use
+        :param stm_capacity: How many interactions from ltm to store
+        :param stm_summarizer: One of `SummarizerTypes` to use for including the summary of last interactions
+        :param stm_max_summary_length: max length of the summary
+        :param stm_min_summary_length: min length of the summary
         """
         self._character_name = character_name
         self._description = description
         self._ltm = LTM(store_type, character_name, ltm_embeddings)
+        self._stm = STM(self._ltm, stm_capacity, stm_summarizer, stm_max_summary_length, stm_min_summary_length)
         self._personalities = personalities
         self._motivations = motivations
         self._mood = mood
@@ -121,8 +131,7 @@ class NPC:
                  ltm_num_results: int = 3,
                  world_num_results: int = 10,
                  max_tokens: int = 250,
-                 temperature: float = 0.8,
-                 prompt_template=PromptTemplate.ALPACA) -> tuple[str, Feedback]:
+                 temperature: float = 0.8) -> tuple[str, Feedback]:
         """
         Produces a reaction/answer to something you say to an NPC. It will use the lore of the world + the short memory
         + the long-term-memory + the personality, motivations and moods to generate a response.
@@ -132,8 +141,6 @@ class NPC:
         :param world_num_results: max number of results to retrieve from World Lore
         :param max_tokens: max_tokens of the answer
         :param temperature: temperature or how creative the answer should be
-        :param prompt_template: one of the PromptTemplates. Default: PromptTemplate.ALPACA (a bad prompt will lead to
-        bad answers. Always check in HuggingFace the name of the LLM in LLMType and which PromptTemplate it requires!)
         :return: a tuple with the text of the answer and a Feedback object, in case you want to use to review the answer
         and provide feedback to the model, for training future npc-based LLMs.
         """
@@ -160,16 +167,14 @@ class NPC:
                                personalities,
                                motivations,
                                conversational_style,
-                               mood,
-                               prompt_template=prompt_template)
+                               mood)
 
         logger.info(prompt)
 
         answer = World.retrieve_answer_from_llm(prompt,
                                                 max_tokens=max_tokens,
                                                 do_sample=True,
-                                                temperature=temperature,
-                                                prompt_template=prompt_template)
+                                                temperature=temperature)
 
         self._ltm.memorize(answer, self._mood)
         return answer, Feedback(self._character_name, self._mood, self._conversational_style, interaction, answer)
@@ -205,3 +210,5 @@ class NPC:
             raise Exception("World not found. Please instantiate a ´World´ first.")
 
         World.get_instance().npcs[self.character_name] = self
+        print(f"{self.character_name} now lives in {World.world_name}")
+

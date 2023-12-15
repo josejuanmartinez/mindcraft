@@ -59,3 +59,9 @@ class LTM:
                 known_by=[ALL, self._character_id],
                 min_similarity=min_similarity
         )
+
+    def get_last_interactions(self, n: int = 5) -> SearchResult:
+        """ Retrieves last `n` interactions from the LTM
+        :param n: number of interactions
+        """
+        return self._store.get_last(n)

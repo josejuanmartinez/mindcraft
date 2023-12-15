@@ -326,8 +326,7 @@ class World:
                                  prompt: str,
                                  max_tokens: int = 100,
                                  do_sample: bool = True,
-                                 temperature: float = 0.8,
-                                 prompt_template: PromptTemplate = PromptTemplate.ALPACA) -> str:
+                                 temperature: float = 0.8) -> str:
         """
         Sends a prompt to the LLM. You can specify the max. number of tokens to retrieve and if you do sampling when
         generating the text.
@@ -335,8 +334,6 @@ class World:
         :param max_tokens: max tokens to receive
         :param do_sample: apply stochastic selection of tokens to prevent always generating the same wording.
         :param temperature: temperature or how creative the answer should be
-        :param prompt_template: the answer usually comes inside the prompt itself, so we need to parse it, for which
-        we need the reference to the template used
         :return: the answer
         """
         if cls._instance.fast:
@@ -349,7 +346,7 @@ class World:
             if cls._instance.llm is None:
                 cls._instance.llm = LocalLLM(cls._instance.llm_type, temperature)
 
-        return cls._instance.llm.retrieve_answer(prompt, max_tokens, do_sample, prompt_template)
+        return cls._instance.llm.retrieve_answer(prompt, max_tokens, do_sample)
 
     @classmethod
     def get_instance(cls):

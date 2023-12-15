@@ -129,7 +129,24 @@ class Chroma(Store):
         result = SearchResult()
         if 'documents' in results:
             if len(results['documents']) > 0:
-                result.documents = results['documents'][0]
+                for d in results['documents']:
+                    result.documents.append(d)
+        return result
+
+    def get_last(self, n: int = 5) -> SearchResult:
+        """
+        ChromaDB `get` method modified to get last `n` entries
+        :param n: number of entries
+        :return SearchResult
+        """
+        total = self.collection.count()
+        offset = max(total - n, 0)
+        results = self.collection.get(offset=offset, limit=total)
+        result = SearchResult()
+        if 'documents' in results:
+            if len(results['documents']) > 0:
+                for d in results['documents']:
+                    result.documents.append(d)
         return result
 
     def delete_collection(self):
