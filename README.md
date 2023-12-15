@@ -138,3 +138,8 @@ world = World(world_name="Lord of the Rings",
   width="50%"
   src="https://github.com/josejuanmartinez/mindcraft/assets/36634572/7778d4a4-6b25-4b1a-9b26-b1bfa9d94727" alt="mindcraft architecture"/>
 </p>
+
+## Header
+<p align="center">
+<img width="100%" src="https://github.com/josejuanmartinez/mindcraft/blob/main/galadriel.png" alt="galadriel"/>
+</p>
