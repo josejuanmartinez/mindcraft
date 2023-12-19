@@ -144,7 +144,7 @@ class NPC:
         :return: a tuple with the text of the answer and a Feedback object, in case you want to use to review the answer
         and provide feedback to the model, for training future npc-based LLMs.
         """
-        long_term_events = self._ltm.remember_about(interaction,
+        memories = self._ltm.remember_about(interaction,
                                                     num_results=ltm_num_results,
                                                     min_similarity=min_similarity).documents
         world_knowledge = World.get_lore(interaction,
@@ -159,15 +159,14 @@ class NPC:
         conversational_style = self._conversational_style.retrieve_interaction_by_mood(mood).documents
 
         # I create the prompt
-        prompt = Prompt.create(long_term_events,
-                               world_knowledge,
-                               self._character_name,
-                               World.get_instance().world_name,
-                               interaction,
-                               personalities,
-                               motivations,
-                               conversational_style,
-                               mood)
+        prompt = World.create(memories,
+                              world_knowledge,
+                              self._character_name,
+                              interaction,
+                              personalities,
+                              motivations,
+                              conversational_style,
+                              mood)
 
         logger.info(prompt)
 

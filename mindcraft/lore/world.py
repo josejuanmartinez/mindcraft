@@ -1,8 +1,8 @@
 from typing import Type
 
+from mindcraft.infra.prompts.prompt import Prompt
 from mindcraft import settings
 from mindcraft.infra.engine.llm import LLM
-from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.vectorstore.search_results import SearchResult
 from mindcraft.infra.splitters.sentence_text_splitter import SentenceTextSplitter
 from mindcraft.infra.splitters.token_text_splitter import TokenTextSplitter
@@ -355,6 +355,9 @@ class World:
 
     @classmethod
     def delete_collection(cls):
+        """
+        Deletes a collection from the Vector Store
+        """
         match cls._instance.store_type.value:
             case StoresTypes.CHROMA.value:
                 try:
@@ -365,3 +368,40 @@ class World:
                 cls._instance.store.delete_collection()
             case _:
                 raise NotImplementedError(f"{cls._instance.store_type} not implemented")
+
+    @classmethod
+    def create(cls,
+               memories: list[str],
+               world_knowledge: list[str],
+               character_name: str,
+               topic: str,
+               personalities: list[str],
+               motivations: list[str],
+               conversational_style: list[str],
+               mood: str = None) -> str:
+        """
+        Static method that creates the prompt to send to the LLM, gathering all the information from the world,
+        past interactions, personalities, motivation, mood, conversational styles, etc.
+        :param memories: A list of past interactions with a specific character about this topic
+        :param world_knowledge: Pieces of lore/knowledge in the world about this topic
+        :param character_name: The name of the character
+        :param topic: The topic you are asking about
+        :param personalities: A list of personalities of the NPC who is answering. For example: `wise`, `intelligent`
+        :param motivations: A list of motivations seeked by the NPC who is answering. For example:
+        `protecting the nature`
+        :param conversational_style: A list of examples of a conversation which happened when the NPC was in a similar
+        mood
+        :param mood: The current mood of the NPC
+        :return: the prompt
+        """
+
+        return Prompt.create(memories,
+                             world_knowledge,
+                             character_name,
+                             cls._instance.world_name,
+                             topic,
+                             personalities,
+                             motivations,
+                             conversational_style,
+                             mood,
+                             prompt_template=cls._instance.llm_type)

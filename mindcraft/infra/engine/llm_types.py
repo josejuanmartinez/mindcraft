@@ -10,11 +10,15 @@ class LLMType(Enum):
     }
     ZEPHYR7B_AWQ = {
         "name": "TheBloke/zephyr-7B-beta-AWQ",
-        "template": PromptTemplate.ALPACA
+        "template": PromptTemplate.NO_ROBOTS
     }
     NOTUS7B_AWQ = {
         "name": "TheBloke/notus-7B-v1-AWQ",
-        "template":PromptTemplate.ALPACA
+        "template": PromptTemplate.NO_ROBOTS
+    }
+    STARLING_AWQ = {
+        "name": "TheBloke/Starling-LM-7B-alpha-AWQ",
+        "template": PromptTemplate.OPENCHAT
     }
 
 

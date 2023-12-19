@@ -12,26 +12,26 @@ class Prompt:
         pass
 
     @staticmethod
-    def create(ltm: list[str],
+    def create(memories: list[str],
                world_knowledge: list[str],
                character_name: str,
                world_name: str,
                topic: str,
-               personality: list[str],
+               personalities: list[str],
                motivations: list[str],
                conversational_style: list[str],
                mood: str = None,
-               prompt_template: PromptTemplate = PromptTemplate.ALPACA) -> str:
+               prompt_template: PromptTemplate = PromptTemplate.NO_ROBOTS) -> str:
         """
         Static method that creates the prompt to send to the LLM, gathering all the information from the world,
         past interactions, personalities, motivation, mood, conversational styles, etc.
-        :param ltm: A list of past interactions with a specific character about this topic
+        :param memories: A list of past interactions with a specific character about this topic
         :param world_knowledge: Pieces of lore/knowledge in the world about this topic
         :param character_name: The name of the character
         :param world_name: The name of the world
         :param topic: The topic you are asking about
-        :param personality: A list of personalities of the NPC who is answering. For example: `wise`, `intelligent`
-        :param motivations: A list of motivations seeked by the NPC who is answering. For example:
+        :param personalities: A list of personalities of the NPC who is answering. For example: `wise`, `intelligent`
+        :param motivations: A list of motivations sought by the NPC who is answering. For example:
         `protecting the nature`
         :param conversational_style: A list of examples of a conversation which happened when the NPC was in a similar
         mood
@@ -51,14 +51,14 @@ class Prompt:
             system += "(you don't know anything about the topic)"
 
         system += f"\n\nMEMORIES:\n"
-        if len(ltm) > 0:
-            system += NL.join(ltm)[:500]
+        if len(memories) > 0:
+            system += NL.join(memories)[:500]
         else:
             system += "(you don't remember past conversations about the topic)"
 
         system += f"\n\nPERSONALITY:\n"
-        if len(personality) > 0:
-            system += f"You are {','.join(personality)}." \
+        if len(personalities) > 0:
+            system += f"You are {','.join(personalities)}." \
                       f"Your answer should clearly show those personality features!"
         else:
             system += "(you don't have any specific personality feature)"
@@ -92,4 +92,4 @@ class Prompt:
                   "- Only write the quote of what you say,you can't add anything except words from your mouth!\n" \
                   "- Don't include anything except the quote, don't analyse, don't comment, just return the quote!" \
 
-        return prompt_template.value['prompt'].replace("{system}", system).replace("{prompt}", topic)
+        return prompt_template.value['template'].value['prompt'].replace("{system}", system).replace("{prompt}", topic)
