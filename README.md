@@ -132,7 +132,10 @@ world = World(world_name="Lord of the Rings",
 ## Example data
 [Lord of the Rings](https://www.kaggle.com/datasets/ashishsinhaiitr/lord-of-the-rings-text)
 
+## Demo 1: Creating a World and an NPC
+[Video](https://youtu.be/T-D1KVIuvjA)
 
+## Architecture
 <p align="center">
 <img 
   width="50%"
