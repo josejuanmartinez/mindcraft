@@ -20,5 +20,9 @@ class LLMType(Enum):
         "name": "TheBloke/Starling-LM-7B-alpha-AWQ",
         "template": PromptTemplate.OPENCHAT
     }
+    YI_6B_AWQ = {
+        "name": "TheBloke/Yi-6B-AWQ",
+        "template": PromptTemplate.ONLY_PROMPT
+    }
 
 

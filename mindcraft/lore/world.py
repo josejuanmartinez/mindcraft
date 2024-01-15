@@ -52,7 +52,7 @@ class World:
         if 'fast' in kwargs and not isinstance(kwargs.get('fast'), bool):
             raise Exception("The value for `fast` param should be True or False")
 
-        if 'remote' in kwargs and not isinstance(kwargs.get('fast'), bool):
+        if 'remote' in kwargs and not isinstance(kwargs.get('remote'), bool):
             raise Exception("The value for `remote` param should be True or False")
 
         if 'llm_type' not in kwargs:
@@ -63,7 +63,7 @@ class World:
 
         if cls._instance is None:
             create_world = True
-        elif kwargs.get('world_name') != cls._instance.world_name:
+        elif ('recreate' in kwargs and kwargs.get('recreate')) or(kwargs.get('world_name') != cls._instance.world_name):
             create_world = True
             destroying_world = True
 
@@ -77,8 +77,8 @@ class World:
             cls._instance._store_type = kwargs.get('store_type')
             cls._instance._llm_type = kwargs.get('llm_type') if 'llm_type' in kwargs else LLMType.ZEPHYR7B_AWQ
             cls._instance._world_data_path = kwargs.get('path') if 'path' in kwargs else WORLD_DATA_PATH
-            cls._instance._fast = kwargs.get('fast')
-            cls._instance._remote = kwargs.get('remote')
+            cls._instance._fast = kwargs.get('fast') if 'fast' in kwargs else False
+            cls._instance._remote = kwargs.get('remote') if cls._instance._fast and 'remote' in kwargs else False
             cls._instance._llm = None
             cls._instance._npcs = dict()
 
@@ -173,14 +173,14 @@ class World:
         """ Getter for the remote property"""
         if self._instance is None:
             return None
-        return self._instance._fast
+        return self._instance._remote
 
     @remote.setter
     def remote(self, value: bool):
         """ Setter for the remote property"""
         if self._instance is None:
             return
-        self._instance._fast = value
+        self._instance._remote = value
 
     @property
     def world_name(self):

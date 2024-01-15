@@ -7,6 +7,7 @@ from mindcraft.infra.engine.llm_types import LLMType
 from mindcraft.infra.vectorstore.stores_types import StoresTypes
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
 from mindcraft.lore.world import World
+
 import pytest
 
 
@@ -30,9 +31,50 @@ def test_create_world(tmp_path):
                   embeddings=EmbeddingsTypes.MINILM,
                   store_type=StoresTypes.CHROMA,
                   llm_type=LLMType.ZEPHYR7B_AWQ,
-                  path=tmp_path)
+                  path=tmp_path,
+                  recreate=True)
 
     assert world is not None
+
+    assert not World.get_instance().fast
+    assert not World.get_instance().remote
+
+    del world
+
+
+def test_create_world_fast(tmp_path):
+    world = World(world_name="TheAgeOfSigmur",
+                  embeddings=EmbeddingsTypes.MINILM,
+                  store_type=StoresTypes.CHROMA,
+                  llm_type=LLMType.ZEPHYR7B_AWQ,
+                  path=tmp_path,
+                  fast=True,
+                  recreate=True)
+
+    assert world is not None
+
+    assert World.get_instance().fast
+    assert not World.get_instance().remote
+
+    del world
+
+
+def test_create_world_fast_remote(tmp_path):
+    world = World(world_name="TheAgeOfSigmur",
+                  embeddings=EmbeddingsTypes.MINILM,
+                  store_type=StoresTypes.CHROMA,
+                  llm_type=LLMType.ZEPHYR7B_AWQ,
+                  path=tmp_path,
+                  recreate=True,
+                  fast=True,
+                  remote=True)
+
+    assert world is not None
+
+    assert World.get_instance().fast
+    assert World.get_instance().remote
+
+    del world
 
 
 def test_import_book_to_world(tmp_path):
@@ -43,7 +85,8 @@ def test_import_book_to_world(tmp_path):
                   embeddings=EmbeddingsTypes.MINILM,
                   store_type=StoresTypes.CHROMA,
                   llm_type=LLMType.ZEPHYR7B_AWQ,
-                  path=tmp_path)
+                  path=tmp_path,
+                  recreate=True)
 
     with open(temp_file, 'w') as file:
         file.write("In the age of Sigmur, everyone in the world is a zombie!")
@@ -60,7 +103,8 @@ def test_import_book_to_world_and_get_lore(temp_file):
     world = World(world_name="TheAgeOfSigmur",
                   embeddings=EmbeddingsTypes.MINILM,
                   store_type=StoresTypes.CHROMA,
-                  llm_type=LLMType.ZEPHYR7B_AWQ)
+                  llm_type=LLMType.ZEPHYR7B_AWQ,
+                  recreate=True)
 
     with open(temp_file, 'w') as file:
         file.write("In the age of Sigmur, everyone in the world is a zombie!")

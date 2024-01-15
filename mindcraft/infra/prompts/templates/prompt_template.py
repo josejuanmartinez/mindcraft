@@ -16,3 +16,8 @@ class PromptTemplate(Enum):
         "prompt": """{system}\n{prompt}\n<|end_of_turn|>\nGPT4 Assistant:""",
         "response": """GPT4 Assistant:"""
     }
+
+    ONLY_PROMPT = {
+        "prompt": """{system}\n{prompt}\nYOUR RESPONSE:""",
+        "response": """YOUR RESPONSE:"""
+    }
