@@ -11,9 +11,8 @@ class SentenceTextSplitter(TextSplitter):
 
     def __init__(self, max_units: int, overlap: int) -> None:
         """
-
-        :param max_units:
-        :param overlap:
+        :param max_units: Max number of sentences to be contained in a chunk
+        :param overlap: Overlap window between previous and next chunks
         """
         try:
             from spacy.lang.en import English
@@ -28,9 +27,9 @@ class SentenceTextSplitter(TextSplitter):
 
     def split_text(self, text: str) -> List[str]:
         """
-
-        :param text:
-        :return:
+        Applies the sentence splitting
+        :param text: Input text
+        :return: a list of sentences
         """
         i = 0
         finish = False

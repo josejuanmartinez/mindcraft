@@ -6,9 +6,8 @@ class TextSplitter:
 
     def __init__(self, max_units: int, overlap: int) -> None:
         """
-
-        :param max_units:
-        :param overlap:
+        :param max_units: Max number of units to be contained in a chunk
+        :param overlap: Overlap window between previous and next chunks
         """
         self.max_units = max_units
         self.overlap = overlap
@@ -16,8 +15,8 @@ class TextSplitter:
 
     def split_text(self, text: str) -> List[str]:
         """
-
-        :param text:
-        :return:
+        Applies the splitting
+        :param text: Input text
+        :return: a list of chunks
         """
         raise NotImplementedError()

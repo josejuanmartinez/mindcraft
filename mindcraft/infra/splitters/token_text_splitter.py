@@ -11,7 +11,7 @@ class TokenTextSplitter(TextSplitter):
         """Splitting text to tokens using model tokenizer.
         :param max_units: Number of tokens to include in a chunk
         :param overlap: Number of tokens to overlap with previous and following chunks
-        :param encoding_name:
+        :param encoding_name: name of the encoding engine from tiktoken. Default: gpt2
         """
         try:
             import tiktoken
@@ -24,9 +24,9 @@ class TokenTextSplitter(TextSplitter):
 
     def split_text(self, text: str) -> List[str]:
         """
-
-        :param text:
-        :return:
+        Applies the token splitting
+        :param text: Input text
+        :return: a list of chunks
         """
         def _encode(_text: str) -> List[int]:
             return self._tokenizer.encode(_text)

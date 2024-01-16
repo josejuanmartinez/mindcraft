@@ -2,7 +2,8 @@ transformers==4.35.2
 sentence_transformers==2.2.2
 autoawq==0.1.7
 requests~=2.31.0
-torch==2.1.1
+torch==2.1.2
+
 # VECTOR STORES OPTIONS:
 # For ChromaDB:
 # chromadb==0.4.18

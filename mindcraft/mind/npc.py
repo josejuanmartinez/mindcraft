@@ -4,7 +4,6 @@ from mindcraft.infra.vectorstore.stores_types import StoresTypes
 from mindcraft.infra.sft.feedback import Feedback
 from mindcraft.features.motivation import Motivation
 from mindcraft.features.personality import Personality
-from mindcraft.infra.prompts.prompt import Prompt
 from mindcraft.lore.world import World
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
 from mindcraft.memory.ltm import LTM
@@ -56,6 +55,9 @@ class NPC:
         self._motivations = motivations
         self._mood = mood
         self._conversational_style = ConversationalStyle(store_type, character_name, ltm_embeddings)
+        self._last_interaction = ""
+        self._last_answer = ""
+
         if not World.is_created():
             logger.warning("World has not been instantiated at this point. Make sure it's created before you call to "
                            "react")
@@ -135,6 +137,10 @@ class NPC:
         """
         Produces a reaction/answer to something you say to an NPC. It will use the lore of the world + the short memory
         + the long-term-memory + the personality, motivations and moods to generate a response.
+
+        Use an iterator to process as it will yield chunks as they come in from the LLM.
+
+
         :param interaction: the interaction / question you tell/ask the NPC
         :param min_similarity: minimum similarity score to filter out irrelevant information
         :param ltm_num_results: max number of results to retrieve from Long-term memory
@@ -144,9 +150,12 @@ class NPC:
         :return: a tuple with the text of the answer and a Feedback object, in case you want to use to review the answer
         and provide feedback to the model, for training future npc-based LLMs.
         """
+        self._last_interaction = interaction
+
         memories = self._ltm.remember_about(interaction,
-                                                    num_results=ltm_num_results,
-                                                    min_similarity=min_similarity).documents
+                                            num_results=ltm_num_results,
+                                            min_similarity=min_similarity).documents
+
         world_knowledge = World.get_lore(interaction,
                                          known_by=self._character_name,
                                          num_results=world_num_results,
@@ -159,24 +168,42 @@ class NPC:
         conversational_style = self._conversational_style.retrieve_interaction_by_mood(mood).documents
 
         # I create the prompt
-        prompt = World.create(memories,
-                              world_knowledge,
-                              self._character_name,
-                              interaction,
-                              personalities,
-                              motivations,
-                              conversational_style,
-                              mood)
+        prompt = World.create_prompt(memories,
+                                     world_knowledge,
+                                     self._character_name,
+                                     interaction,
+                                     personalities,
+                                     motivations,
+                                     conversational_style,
+                                     mood)
 
         logger.info(prompt)
 
-        answer = World.retrieve_answer_from_llm(prompt,
-                                                max_tokens=max_tokens,
-                                                do_sample=True,
-                                                temperature=temperature)
+        chunks = []
+        for chunk in World.retrieve_answer_from_llm(prompt,
+                                                    max_tokens=max_tokens,
+                                                    do_sample=True,
+                                                    temperature=temperature):
+            yield chunk
+            chunks.append(chunk)
 
-        self._ltm.memorize(answer, self._mood)
-        return answer, Feedback(self._character_name, self._mood, self._conversational_style, interaction, answer)
+        self._last_answer = "".join(chunks)
+        self._ltm.memorize(self._last_answer, self._mood)
+
+    def retrieve_feedback_to_finetune(self) -> Feedback:
+        """
+        Retrieves a Feedback object given the last interaction, which can help you store the data for revision and
+        eventually train of your own finetuned LLM
+        :return: a Feedback object
+        """
+        if self._last_answer is None \
+                or len(self._last_answer) < 1 \
+                or self._last_interaction is None \
+                or len(self._last_interaction) < 1:
+            raise Exception("Feedback unavailable (no interaction or answer found as last)")
+
+        return Feedback(self._character_name, self._mood, self._conversational_style, self._last_interaction,
+                        self._last_answer)
 
     def change_mood(self, mood: str):
         """
@@ -209,5 +236,4 @@ class NPC:
             raise Exception("World not found. Please instantiate a ´World´ first.")
 
         World.get_instance().npcs[self.character_name] = self
-        print(f"{self.character_name} now lives in {World.world_name}")
-
+        print(f"`{self.character_name}` now lives in `{World.get_instance().world_name}`")

@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="mindcraft",
-    version="0.2.2",
+    version="0.2.3",
     packages=find_packages(),
     package_data={p: ["*"] for p in find_packages()},
     url="https://github.com/josejuanmartinez/mindcraft",

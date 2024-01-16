@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Type, Union, Iterator, List
 
 from mindcraft.infra.prompts.prompt import Prompt
 from mindcraft import settings
@@ -14,7 +14,7 @@ from mindcraft.infra.engine.llm_types import LLMType
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
 from mindcraft.infra.engine.remote_fast_llm import RemoteFastLLM
 from mindcraft.infra.engine.fast_llm import FastLLM
-from mindcraft.settings import SEPARATOR, LOGGER_FORMAT, WORLD_DATA_PATH, ALL
+from mindcraft.settings import SEPARATOR, LOGGER_FORMAT, WORLD_DATA_PATH, ALL, FAST_INFERENCE_URL
 
 import logging
 
@@ -55,8 +55,13 @@ class World:
         if 'remote' in kwargs and not isinstance(kwargs.get('remote'), bool):
             raise Exception("The value for `remote` param should be True or False")
 
+        if 'streaming' in kwargs and not isinstance(kwargs.get('streaming'), bool):
+            raise Exception("The value for `streaming` param should be True or False")
+
         if 'llm_type' not in kwargs:
             logger.warning(f"`llm_type` not found in World() initializer. Initializing to {LLMType.ZEPHYR7B_AWQ}")
+        elif not isinstance(kwargs.get('llm_type'), LLMType):
+            raise Exception(f"`llm_type` should be of type  `LLMType`")
 
         create_world = False
         destroying_world = False
@@ -79,6 +84,8 @@ class World:
             cls._instance._world_data_path = kwargs.get('path') if 'path' in kwargs else WORLD_DATA_PATH
             cls._instance._fast = kwargs.get('fast') if 'fast' in kwargs else False
             cls._instance._remote = kwargs.get('remote') if cls._instance._fast and 'remote' in kwargs else False
+            cls._instance._streaming = kwargs.get('streaming') \
+                if cls._instance._remote and 'streaming' in kwargs else False
             cls._instance._llm = None
             cls._instance._npcs = dict()
 
@@ -95,6 +102,14 @@ class World:
                                                   cls._instance._embeddings)
                 case _:
                     raise NotImplementedError(f"{kwargs.get('store_type')} not implemented")
+
+            if cls._instance._remote:
+                print("Client for the Remote server configured. Please start your server running:\n"
+                      f"`python -m vllm.entrypoints.openai.api_server "
+                      f"--model \"{cls._instance._llm_type.value['name']}\" --trust-remote-code &`")
+                print(f"Mindcraft will try to reach out this server:\n{FAST_INFERENCE_URL}\n")
+                print(f"If that's not the right HOST/PORT, overwrite them setting env vars `MINDCRAFT_HOST` and "
+                      f"`MINDCRAFT_PORT`.")
 
         return cls._instance
 
@@ -148,7 +163,7 @@ class World:
         return self._instance._npcs
 
     @npcs.setter
-    def npcs(self, value: Type['NPC']):
+    def npcs(self, value: dict):
         """ Setter for the npcs property"""
         if self._instance is None:
             return
@@ -181,6 +196,20 @@ class World:
         if self._instance is None:
             return
         self._instance._remote = value
+
+    @property
+    def streaming(self):
+        """ Getter for the streaming property"""
+        if self._instance is None:
+            return None
+        return self._instance._streaming
+
+    @streaming.setter
+    def streaming(self, value: bool):
+        """ Setter for the streaming property"""
+        if self._instance is None:
+            return
+        self._instance._streaming = value
 
     @property
     def world_name(self):
@@ -326,7 +355,7 @@ class World:
                                  prompt: str,
                                  max_tokens: int = 100,
                                  do_sample: bool = True,
-                                 temperature: float = 0.8) -> str:
+                                 temperature: float = 0.8) -> Union[Iterator[str], str]:
         """
         Sends a prompt to the LLM. You can specify the max. number of tokens to retrieve and if you do sampling when
         generating the text.
@@ -334,7 +363,7 @@ class World:
         :param max_tokens: max tokens to receive
         :param do_sample: apply stochastic selection of tokens to prevent always generating the same wording.
         :param temperature: temperature or how creative the answer should be
-        :return: the answer
+        :return: an iterator to the text of the answer (streaming=True) or the answer (streaming=False)
         """
         if cls._instance.fast:
             if cls._instance.llm is None:
@@ -346,7 +375,8 @@ class World:
             if cls._instance.llm is None:
                 cls._instance.llm = LocalLLM(cls._instance.llm_type, temperature)
 
-        return cls._instance.llm.retrieve_answer(prompt, max_tokens, do_sample)
+        for chunk in cls._instance.llm.retrieve_answer(prompt, max_tokens, do_sample, cls._instance.streaming):
+            yield chunk
 
     @classmethod
     def get_instance(cls):
@@ -370,15 +400,15 @@ class World:
                 raise NotImplementedError(f"{cls._instance.store_type} not implemented")
 
     @classmethod
-    def create(cls,
-               memories: list[str],
-               world_knowledge: list[str],
-               character_name: str,
-               topic: str,
-               personalities: list[str],
-               motivations: list[str],
-               conversational_style: list[str],
-               mood: str = None) -> str:
+    def create_prompt(cls,
+                      memories: list[str],
+                      world_knowledge: list[str],
+                      character_name: str,
+                      topic: str,
+                      personalities: list[str],
+                      motivations: list[str],
+                      conversational_style: list[str],
+                      mood: str = None) -> str:
         """
         Static method that creates the prompt to send to the LLM, gathering all the information from the world,
         past interactions, personalities, motivation, mood, conversational styles, etc.
