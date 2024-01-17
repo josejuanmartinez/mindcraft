@@ -141,11 +141,11 @@ your gpu, you need to configure CUDA for Windows.
 2. Select your Windows version and specifics.
 3. Download and install
 4. Uninstall torch (`pip uninstall torch`)
-5a. Run `pip install -r requirements.txt' again.
-5b. Alternatively you can just run this command:
+5. Run the following command:
 ```
 pip3 install torch -i https://download.pytorch.org/whl/cu121
 ```
+6. Restart your IDE (better if you restart your computer)
 
 You torch on windows CUDA should be working. To test it:
 ```python
@@ -154,7 +154,7 @@ import torch
 if __name__ == "__main__":
     print(torch.cuda.is_available())
 ```
-
+You should get `True` as a response if everything is working.
 
 ## vLLM
 `vLLM` has been included for Fast Inference, in local, remote installations and Docker.
