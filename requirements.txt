@@ -1,10 +1,7 @@
-transformers==4.36.2
+transformers==4.35.2
 sentence_transformers==2.2.2
 autoawq==0.1.8
 requests~=2.31.0
-# LINUX
-# torch==2.1.2
-# WINDOWS
 -i https://download.pytorch.org/whl/cu121
 torch==2.1.2
 

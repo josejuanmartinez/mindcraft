@@ -140,7 +140,7 @@ your gpu, you need to configure CUDA for Windows.
 2. Select your Windows version and specifics.
 3. Download and install
 4. Uninstall torch (`pip uninstall torch`)
-5a. Go to requirements.txt, comment the line after LINUX for torch and uncomment the line after WINDOWS
+5a. Run `pip install -r requirements.txt' again.
 5b. Alternatively you can just run this command:
 ```
 pip3 install torch -i https://download.pytorch.org/whl/cu121
