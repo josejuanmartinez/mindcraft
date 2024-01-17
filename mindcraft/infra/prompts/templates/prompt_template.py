@@ -21,3 +21,8 @@ class PromptTemplate(Enum):
         "prompt": """{system}\n{prompt}\nYOUR RESPONSE:""",
         "response": """YOUR RESPONSE:"""
     }
+
+    INSTRUCT_PROMPT_OUTPUT = {
+        "prompt": """{system}\nInstruct: {prompt}\nOutput:""",
+        "response": """Output:"""
+    }

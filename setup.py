@@ -2,18 +2,18 @@ from setuptools import find_packages, setup
 
 setup(
     name="mindcraft",
-    version="0.2.3",
+    version="0.2.4",
     packages=find_packages(),
     package_data={p: ["*"] for p in find_packages()},
     url="https://github.com/josejuanmartinez/mindcraft",
     download_url="https://github.com/josejuanmartinez/mindcraft",
     license="MIT",
     install_requires=[
-        "transformers==4.35.2",
+        "transformers==4.36.2",
         "sentence_transformers==2.2.2",
-        "autoawq==0.1.7",
+        "autoawq==0.1.8",
         "requests~=2.31.0",
-        "torch==2.1.1"
+        "torch==2.1.2"
     ],
     python_requires=">=3.10.0",
     author="Juan.Martinez",

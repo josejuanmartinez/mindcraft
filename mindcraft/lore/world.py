@@ -12,8 +12,8 @@ from mindcraft.infra.vectorstore.store import Store
 from mindcraft.infra.engine.local_llm import LocalLLM
 from mindcraft.infra.engine.llm_types import LLMType
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
-from mindcraft.infra.engine.remote_fast_llm import RemoteFastLLM
-from mindcraft.infra.engine.fast_llm import FastLLM
+from mindcraft.infra.engine.remote_vllm import RemoteVLLM
+from mindcraft.infra.engine.local_vllm import LocalVLLM
 from mindcraft.settings import SEPARATOR, LOGGER_FORMAT, WORLD_DATA_PATH, ALL, FAST_INFERENCE_URL
 
 import logging
@@ -368,14 +368,18 @@ class World:
         if cls._instance.fast:
             if cls._instance.llm is None:
                 if cls._instance.remote:
-                    cls._instance.llm = RemoteFastLLM(cls._instance.llm_type, temperature)
+                    cls._instance.llm = RemoteVLLM(cls._instance.llm_type, temperature)
                 else:
-                    cls._instance.llm = FastLLM(cls._instance.llm_type, temperature)
+                    cls._instance.llm = LocalVLLM(cls._instance.llm_type, temperature)
         else:
             if cls._instance.llm is None:
                 cls._instance.llm = LocalLLM(cls._instance.llm_type, temperature)
 
-        for chunk in cls._instance.llm.retrieve_answer(prompt, max_tokens, do_sample, cls._instance.streaming):
+        for chunk in cls._instance.llm.retrieve_answer(prompt,
+                                                       max_tokens,
+                                                       do_sample,
+                                                       cls._instance.llm_type.value['template'],
+                                                       cls._instance.streaming):
             yield chunk
 
     @classmethod

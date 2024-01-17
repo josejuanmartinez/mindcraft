@@ -33,11 +33,11 @@ def temp_file():
 
 
 @pytest.fixture
-def world_fixture(temp_file):
+def zephyr_world_fixture(temp_file):
     world = World(world_name="TheAgeOfSigmur",
                   embeddings=EmbeddingsTypes.MINILM,
                   store_type=StoresTypes.CHROMA,
-                  llm_type=LLMType.ZEPHYR7B_AWQ,
+                  llm_type=LLMType.PHI2_3B,
                   recreate=True,
                   fast=False,
                   remote=False,
@@ -53,30 +53,7 @@ def world_fixture(temp_file):
 
     return world
 
-
-@pytest.fixture
-def fast_world_fixture(temp_file):
-    world = World(world_name="TheAgeOfSigmur",
-                  embeddings=EmbeddingsTypes.MINILM,
-                  store_type=StoresTypes.CHROMA,
-                  llm_type=LLMType.ZEPHYR7B_AWQ,
-                  recreate=True,
-                  fast=True,
-                  remote=False,
-                  streaming=False)
-
-    with open(temp_file, 'w') as file:
-        file.write("In the age of Sigmur, everyone in the world is a zombie!")
-
-    world.book_to_world(book_path=temp_file,
-                        text_splitter=TextSplitterTypes.SENTENCE_SPLITTER,
-                        max_units=3,
-                        overlap=1)
-
-    return world
-
-
-def test_npc_is_created(world_fixture):
+def test_npc_is_created(zephyr_world_fixture):
     name = "Zombie Leader"
     description = "The Zombie Leader leaving in the Age of Sigmur World"
     personalities = [Personality(x) for x in ['evil']]
@@ -93,8 +70,7 @@ def test_npc_is_created(world_fixture):
 
     assert zombie is not None
 
-
-def test_npc_is_added_to_world(world_fixture):
+def test_npc_is_added_to_world(zephyr_world_fixture):
     name = "Zombie Leader"
     description = "The Zombie Leader leaving in the Age of Sigmur World"
     personalities = [Personality(x) for x in ['evil']]
@@ -114,7 +90,7 @@ def test_npc_is_added_to_world(world_fixture):
     assert zombie.character_name in World.get_instance().npcs
 
 
-def test_npc_conversation_local(world_fixture):
+def test_npc_conversation_zephyr(zephyr_world_fixture):
 
     name = "Zombie Leader"
     description = "The Zombie Leader leaving in the Age of Sigmur World"
@@ -141,6 +117,7 @@ def test_npc_conversation_local(world_fixture):
     for answer in answer_iter:
         print(answer)
         assert answer is not None
+
 
 
 if __name__ == '__main__':

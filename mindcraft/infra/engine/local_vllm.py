@@ -1,5 +1,6 @@
 from typing import Iterator, Union
 
+from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.engine.llm import LLM
 from mindcraft.infra.engine.llm_types import LLMType
 
@@ -11,7 +12,7 @@ logging.basicConfig(format=LOGGER_FORMAT, datefmt=DATE_FORMAT, level=logging.INF
 logger = logging.getLogger(__name__)
 
 
-class FastLLM(LLM):
+class LocalVLLM(LLM):
     def __init__(self,
                  engine: LLMType = LLMType.ZEPHYR7B_AWQ,
                  temperature: float = 0.8):
@@ -32,7 +33,7 @@ class FastLLM(LLM):
         self.llm = LLM(model=self.llm_type.value['name'],
                        trust_remote_code=True,
                        dtype='float16',
-                       quantization='awq',
+                       quantization=engine.value['quantization'],
                        tokenizer_mode="auto")
 
     def __call__(self,
@@ -63,6 +64,7 @@ class FastLLM(LLM):
                         prompt: str,
                         max_tokens: int = 100,
                         do_sample: bool = True,
+                        prompt_template: PromptTemplate = PromptTemplate.ALPACA,
                         streaming: bool = False) -> Union[Iterator[str], str]:
         """
         Sends a prompt to the LLM. You can specify the max. number of tokens to retrieve and if you do sampling when
@@ -70,6 +72,8 @@ class FastLLM(LLM):
         :param prompt: the prompt to use
         :param max_tokens: max tokens to receive
         :param do_sample: apply stochastic selection of tokens to prevent always generating the same wording.
+        :param prompt_template: the answer usually comes inside the prompt itself, so we need to parse it, for which
+        we need the reference to the template used
         :param streaming: apply streaming if available (a text iterator will be returned instead of the text)
         :return: the answer
         """

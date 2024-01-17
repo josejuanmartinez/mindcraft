@@ -150,7 +150,6 @@ class NPC:
         :return: a tuple with the text of the answer and a Feedback object, in case you want to use to review the answer
         and provide feedback to the model, for training future npc-based LLMs.
         """
-        self._last_interaction = interaction
 
         memories = self._ltm.remember_about(interaction,
                                             num_results=ltm_num_results,
@@ -177,6 +176,7 @@ class NPC:
                                      conversational_style,
                                      mood)
 
+        self._last_interaction = prompt
         logger.info(prompt)
 
         chunks = []
@@ -226,6 +226,16 @@ class NPC:
     def conversational_style(self):
         """ Getter of the `conversational_style` property"""
         return self._conversational_style
+
+    @property
+    def last_interaction(self):
+        """ Getter of the `last_interaction` property"""
+        return self._last_interaction
+
+    @property
+    def last_answer(self):
+        """ Getter of the `last_answer` property"""
+        return self._last_answer
 
     def add_npc_to_world(self):
         """

@@ -9,20 +9,19 @@ Requires Python 3.10 or higher.
 
 It includes the following features:
 
-- Text generation using LLMs (Mistral)
+- Text generation using LLMs
 - Motivations, personality, personal goals
 - Knowledge and awareness about the world (RAG)
 - Short and Long-term memory (RAG)
 - Conversational styles
 - Supervised finetuning by human feedback (SFT)
-- Integration with vLLM for fast-inference (both local and Docker)
+- Integration with vLLM for **fast inference** and **streaming** locally, remotelly or in Docker. 
 - Usage of quantized AWQ models
 - Integration with API and RPC (to come!)
 
 ## Create a World from a book
 ```python
 from mindcraft.infra.engine.llm_types import LLMType
-from mindcraft.infra.splitters.text_splitters_types import TextSplitterTypes
 from mindcraft.infra.vectorstore.stores_types import StoresTypes
 from mindcraft.infra.embeddings.embeddings_types import EmbeddingsTypes
 from mindcraft.lore.world import World
@@ -30,8 +29,15 @@ from mindcraft.lore.world import World
 world = World(world_name="Middle Earth from the Lord of the Rings",
               embeddings=EmbeddingsTypes.MINILM,
               store_type=StoresTypes.CHROMA,
-              llm_type=LLMType.ZEPHYR7B_AWQ,
-              fast=False)
+              llm_type=LLMType.YI_6B_AWQ,
+              fast=False,      # <--- fast=True to switch on vLLM
+              remote=False,    # <--- remote=True to use a remote vLLM server
+              streaming=True) # <--- streaming=True to use vLLM streaming
+```
+
+Now we use some book to carry out chunk splitting and add it to our favourite Vector Database (in our case, ChromaDB)
+```python
+from mindcraft.infra.splitters.text_splitters_types import TextSplitterTypes
 
 world.book_to_world(book_path="/content/lotr1.txt",
                     text_splitter=TextSplitterTypes.SENTENCE_SPLITTER,
@@ -39,6 +45,7 @@ world.book_to_world(book_path="/content/lotr1.txt",
                     overlap=1,
                     encoding='utf-8')
 ```
+
 ## Query the lore of the world
 Once a world has been created and populated with lore, query the lore known by NPCs by doing:
 ```python
@@ -76,12 +83,19 @@ galadriel.add_npc_to_world()
 ```
 
 # Ask questions to the NPC
+We get an iterator for the responses, to allow inference in streaming way.
 ```python
-answer, _ = galadriel.react_to("What do you think about the Rings of Power",
+answer_iter = galadriel.react_to("What do you think about the Rings of Power",
                                min_similarity=0.85,
                                ltm_num_results=3,
                                world_num_results=7,
                                max_tokens=600)
+```
+
+So your answers will be in the iterator, don't forget to loop through it!
+```
+for answer in answer_iter:
+    print(answer)
 ```
 
 ### Example of answer using Zephyr 7B quantized to 4b
@@ -103,34 +117,86 @@ Galadriel||default||Good night, Galadriel!||'Good night, my friends! '\nsaid Gal
 Galadriel||grave||why he could say that?||....`He would be rash indeed that said that thing,' said Galadriel gravely.
 ```
 
-## LLM integrated (4b quantization with AWQ)
-- TheBloke/openinstruct-mistral-7B-AWQ
+## LLM integrated
+### Quantized
+- TheBloke/mistral_7b_norobots-AWQ
 - TheBloke/zephyr-7B-beta-AWQ
+- TheBloke/notus-7B-v1-AWQ
+- TheBloke/Starling-LM-7B-alpha-AWQ
+- TheBloke/Yi-6B-AWQ
 - TheBloke/dragon-yi-6B-v0-AWQ
+### Unquantized
+- microsoft/phi-2
+- stabilityai/stablelm-zephyr-3b
 
 ## Embeddings for RAG
 - [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
 
-## CUDA and Torch
-Although torch is included in the `transformers` library as a dependency, if you see your gpu is not being
-utilized, try to run:
+## CUDA and Torch in WINDOWS
+If you are running on Windows on a machine with a GPU, and you get a message about not being able to find 
+your gpu, you need to configure CUDA for Windows.
+
+1. Go to [CUDA installation webpage](https://developer.nvidia.com/cuda-downloads).
+2. Select your Windows version and specifics.
+3. Download and install
+4. Uninstall torch (`pip uninstall torch`)
+5a. Go to requirements.txt, comment the line after LINUX for torch and uncomment the line after WINDOWS
+5b. Alternatively you can just run this command:
 ```
 pip3 install torch -i https://download.pytorch.org/whl/cu121
 ```
 
-## Fast Inference
-`vLLM` has been included for Fast Inference, in both local installation and installed using Docker.
+You torch on windows CUDA should be working. To test it:
+```python
+import torch
+
+if __name__ == "__main__":
+    print(torch.cuda.is_available())
+```
+
+
+## vLLM
+`vLLM` has been included for Fast Inference, in local, remote installations and Docker.
+
+### Local Fast inference (Paged Attention)
+
 To use fast-inference, just run add `fast=True` to your `World` object:
 ```python
 world = World(world_name="Lord of the Rings",
               embeddings=EmbeddingsTypes.MINILM,
               store_type=StoresTypes.CHROMA,
-              llm_type=LLMType.YI6B,
+              llm_type=LLMType.YI_6B_AWQ,
               fast=True) # <---- HERE
 ```
 
+### Remote Fast Inference
+To the previous `fast` parameter, add also `remote=True`
+```python
+world = World(world_name="Lord of the Rings",
+              embeddings=EmbeddingsTypes.MINILM,
+              store_type=StoresTypes.CHROMA,
+              llm_type=LLMType.YI_6B_AWQ,
+              fast=True,   # <---- HERE
+              remote=True) # <---- HERE
+```
+
+### Streaming (only if remote!)
+To the previous `fast` and `remote` parameters, add also `streaming=True`
+```python
+world = World(world_name="Lord of the Rings",
+              embeddings=EmbeddingsTypes.MINILM,
+              store_type=StoresTypes.CHROMA,
+              llm_type=LLMType.YI_6B_AWQ,
+              fast=True,   # <---- HERE
+              remote=True,
+              streaming=True) # <---- HERE
+```
+
 ## Example data
-[Lord of the Rings](https://www.kaggle.com/datasets/ashishsinhaiitr/lord-of-the-rings-text)
+- [Lord of the Rings](https://www.kaggle.com/datasets/ashishsinhaiitr/lord-of-the-rings-text)
+
+## Notebooks
+You can find notebooks in the `notebooks` folder of this project.
 
 ## Demo 1: Creating a World and an NPC
 [Video](https://youtu.be/T-D1KVIuvjA)
@@ -141,6 +207,9 @@ world = World(world_name="Lord of the Rings",
   width="50%"
   src="https://github.com/josejuanmartinez/mindcraft/assets/36634572/7778d4a4-6b25-4b1a-9b26-b1bfa9d94727" alt="mindcraft architecture"/>
 </p>
+
+## Tests
+`python -m pytest tests/*`
 
 ## Header
 <p align="center">

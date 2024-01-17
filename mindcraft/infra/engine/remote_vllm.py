@@ -3,8 +3,8 @@ from typing import Iterator, Union
 
 import requests
 
+from mindcraft.infra.engine.llm import LLM
 from mindcraft import settings
-from mindcraft.infra.engine.fast_llm import FastLLM
 from mindcraft.infra.prompts.templates.prompt_template import PromptTemplate
 from mindcraft.infra.engine.llm_types import LLMType
 
@@ -16,7 +16,7 @@ logging.basicConfig(format=LOGGER_FORMAT, datefmt=DATE_FORMAT, level=logging.INF
 logger = logging.getLogger(__name__)
 
 
-class RemoteFastLLM(FastLLM):
+class RemoteVLLM(LLM):
     def __init__(self,
                  engine: LLMType = LLMType.ZEPHYR7B_AWQ,
                  temperature: float = 0.8):
@@ -45,6 +45,7 @@ class RemoteFastLLM(FastLLM):
         """
         headers = {"User-Agent": "mindcraft"}
         request = {
+            "model": self.llm_type.value['name'],
             "prompt": prompt,
             "stream": streaming,
             "max_tokens": max_tokens,
@@ -54,7 +55,7 @@ class RemoteFastLLM(FastLLM):
         response = requests.post(settings.FAST_INFERENCE_URL,
                                  headers=headers,
                                  json=request,
-                                 stream=False)
+                                 stream=streaming)
 
         chunks = []
         for chunk in response.iter_lines(chunk_size=8192,
@@ -62,11 +63,16 @@ class RemoteFastLLM(FastLLM):
                                          delimiter=b"\0"):
             if chunk:
                 data = json.loads(chunk.decode("utf-8"))
-                output = data["text"][0]
-                if streaming:
-                    yield output
-                else:
-                    chunks.append(output)
+                if 'choices' not in data:
+                    raise Exception(f"`choices` field not found in response. Response: {data}")
+                for choice in data['choices']:
+                    if 'text' not in choice:
+                        raise Exception(f"`text` field not found in choice. Response: {data}")
+                    output = choice["text"]
+                    if streaming:
+                        yield output
+                    else:
+                        chunks.append(output)
 
         if not streaming:
             yield "".join(chunks)
